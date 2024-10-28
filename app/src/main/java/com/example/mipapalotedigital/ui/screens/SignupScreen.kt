@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -12,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.mipapalotedigital.R
 import com.example.mipapalotedigital.viewmodels.UsuarioViewModel
@@ -24,9 +26,16 @@ fun SignUpScreen(
     onLoginClick: () -> Unit
 ) {
     var nombre by remember { mutableStateOf("") }
+    var apellido by remember { mutableStateOf("") }
     var correo by remember { mutableStateOf("") }
+    var telefono by remember { mutableStateOf("") }
     var contrasenia by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
+    var signUpError by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+
     val coroutineScope = rememberCoroutineScope()
+    val isLoading by usuarioViewModel.isLoading.collectAsState()
 
     Column(
         modifier = Modifier
@@ -39,7 +48,7 @@ fun SignUpScreen(
             contentDescription = "Logo",
             modifier = Modifier
                 .size(200.dp)
-                .padding(vertical = 32.dp)
+                .padding(vertical = 16.dp)
         )
 
         Text(
@@ -53,46 +62,95 @@ fun SignUpScreen(
         OutlinedTextField(
             value = nombre,
             onValueChange = { nombre = it },
-            label = { Text("Ingrese su usuario") },
+            label = { Text("Nombre") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedTextField(
+            value = apellido,
+            onValueChange = { apellido = it },
+            label = { Text("Apellido") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         OutlinedTextField(
             value = correo,
             onValueChange = { correo = it },
-            label = { Text("Ingrese su correo electrónico") },
+            label = { Text("Correo electrónico") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedTextField(
+            value = telefono,
+            onValueChange = { telefono = it },
+            label = { Text("Teléfono") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         OutlinedTextField(
             value = contrasenia,
             onValueChange = { contrasenia = it },
-            label = { Text("Ingrese su contraseña") },
+            label = { Text("Contraseña") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
-            visualTransformation = PasswordVisualTransformation(),
+            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
-                Icon(
-                    imageVector = Icons.Default.Visibility,
-                    contentDescription = "Toggle password visibility"
-                )
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(
+                        imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                        contentDescription = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña"
+                    )
+                }
             }
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(16.dp))
+
+        if (signUpError) {
+            Text(
+                text = errorMessage,
+                color = Color.Red,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+        }
 
         Button(
             onClick = {
                 coroutineScope.launch {
-                    val signUpExitoso = usuarioViewModel.signUp(nombre, "", correo, "", contrasenia)
-                    if (signUpExitoso) {
-                        onSignUpSuccess()
+                    if (validateFields(nombre, apellido, correo, telefono, contrasenia)) {
+                        try {
+                            val signUpExitoso = usuarioViewModel.signUp(
+                                nombre = nombre,
+                                apellido = apellido,
+                                correo = correo,
+                                telefono = telefono,
+                                contrasenia = contrasenia
+                            )
+                            if (signUpExitoso) {
+                                onSignUpSuccess()
+                            } else {
+                                signUpError = true
+                                errorMessage = "Error al crear la cuenta"
+                            }
+                        } catch (e: Exception) {
+                            signUpError = true
+                            errorMessage = e.message ?: "Error desconocido"
+                        }
+                    } else {
+                        signUpError = true
+                        errorMessage = "Por favor complete todos los campos"
                     }
                 }
             },
@@ -101,9 +159,14 @@ fun SignUpScreen(
                 .height(50.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFF87B734)
-            )
+            ),
+            enabled = !isLoading
         ) {
-            Text("Signup")
+            if (isLoading) {
+                CircularProgressIndicator(color = Color.White)
+            } else {
+                Text("Crear cuenta")
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -120,6 +183,22 @@ fun SignUpScreen(
             )
         }
     }
+}
+
+private fun validateFields(
+    nombre: String,
+    apellido: String,
+    correo: String,
+    telefono: String,
+    contrasenia: String
+): Boolean {
+    return nombre.isNotBlank() &&
+            apellido.isNotBlank() &&
+            correo.isNotBlank() &&
+            telefono.isNotBlank() &&
+            contrasenia.isNotBlank() &&
+            android.util.Patterns.EMAIL_ADDRESS.matcher(correo).matches() &&
+            contrasenia.length >= 6
 }
 
 
