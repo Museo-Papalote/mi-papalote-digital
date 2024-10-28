@@ -17,11 +17,23 @@ class UsuarioViewModel(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    private val _currentUser = MutableStateFlow<Usuario?>(null)
+    val currentUser: StateFlow<Usuario?> = _currentUser.asStateFlow()
+
+    init {
+        if ((repository as UsuarioRepositoryImpl).isUserLoggedIn()) {
+            _loginState.value = true
+        }
+    }
+
     suspend fun login(correo: String, contrasenia: String): Boolean {
         _isLoading.value = true
         try {
             val result = repository.login(correo, contrasenia)
             _loginState.value = result
+            if (result) {
+                _currentUser.value = (repository as UsuarioRepositoryImpl).getCurrentUser()
+            }
             return result
         } finally {
             _isLoading.value = false
@@ -37,17 +49,31 @@ class UsuarioViewModel(
     ): Boolean {
         _isLoading.value = true
         try {
-            return repository.signUp(
-                Usuario(
-                    nombre = nombre,
-                    apellido = apellido,
-                    correo = correo,
-                    telefono = telefono,
-                    contrasenia = contrasenia
-                )
+            val usuario = Usuario(
+                nombre = nombre,
+                apellido = apellido,
+                correo = correo,
+                telefono = telefono,
+                contrasenia = contrasenia
             )
+            val result = repository.signUp(usuario)
+            if (result) {
+                _loginState.value = true
+                _currentUser.value = (repository as UsuarioRepositoryImpl).getCurrentUser()
+            }
+            return result
         } finally {
             _isLoading.value = false
         }
+    }
+
+    fun logout() {
+        (repository as UsuarioRepositoryImpl).logout()
+        _loginState.value = false
+        _currentUser.value = null
+    }
+
+    fun isUserLoggedIn(): Boolean {
+        return (repository as UsuarioRepositoryImpl).isUserLoggedIn()
     }
 }
