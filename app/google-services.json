@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "161129705323",
+    "project_id": "museo-papalote-a088b",
+    "storage_bucket": "museo-papalote-a088b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:161129705323:android:c4b3180954a117a027262e",
+        "android_client_info": {
+          "package_name": "com.example.mipapalotedigital"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDWSYtdQk6PFfd4XVGfbioNLHxKJXNeQhY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
