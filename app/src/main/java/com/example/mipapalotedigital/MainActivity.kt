@@ -1,6 +1,5 @@
 package com.example.mipapalotedigital
 
-import BottomNavigationBar
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -13,15 +12,20 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import BottomNavigationBar
 import com.example.mipapalotedigital.navigation.NavRoutes
+import ActividadRepositoryImpl
 import com.example.mipapalotedigital.ui.screens.HomeScreen
 import com.example.mipapalotedigital.ui.screens.LoginScreen
 import com.example.mipapalotedigital.ui.screens.SignUpScreen
 import com.example.mipapalotedigital.ui.theme.MiPapaloteDigitalTheme
+import ActividadViewModel
 import com.example.mipapalotedigital.viewmodels.UsuarioViewModel
 import kotlinx.coroutines.launch
 
@@ -44,6 +48,11 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainApp() {
     val usuarioViewModel: UsuarioViewModel = viewModel()
+    val actividadViewModel: ActividadViewModel = viewModel(factory = object : ViewModelProvider.Factory {
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            return ActividadViewModel(ActividadRepositoryImpl()) as T
+        }
+    })
     val navController = rememberNavController()
     val coroutineScope = rememberCoroutineScope()
 
@@ -86,7 +95,11 @@ fun MainApp() {
                 )
             }
             composable(NavRoutes.HOME) {
-                HomeScreen(usuarioViewModel = usuarioViewModel)
+                HomeScreen(
+                    usuarioViewModel = usuarioViewModel,
+                    actividadViewModel = actividadViewModel,
+                    navController = navController
+                )
             }
             composable(NavRoutes.ACHIEVEMENTS) {
                 Text(text = "Logros Screen")
