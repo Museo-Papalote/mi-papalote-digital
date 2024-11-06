@@ -26,6 +26,7 @@ import com.example.mipapalotedigital.ui.screens.LoginScreen
 import com.example.mipapalotedigital.ui.screens.SignUpScreen
 import com.example.mipapalotedigital.ui.theme.MiPapaloteDigitalTheme
 import ActividadViewModel
+import com.example.mipapalotedigital.ui.screens.FloorSelectorApp
 import com.example.mipapalotedigital.viewmodels.UsuarioViewModel
 import kotlinx.coroutines.launch
 
@@ -108,7 +109,7 @@ fun MainApp() {
                 Text(text = "Cámara Screen")
             }
             composable(NavRoutes.MAP) {
-                Text(text = "Mapa Screen")
+                FloorSelectorApp()
             }
             composable(NavRoutes.ALBUM) {
                 Text(text = "Álbum Screen")
