@@ -30,6 +30,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.example.mipapalotedigital.ui.screens.CameraScreen
 import com.example.mipapalotedigital.ui.screens.FloorSelectorApp
 import com.example.mipapalotedigital.viewmodels.UsuarioViewModel
 import kotlinx.coroutines.launch
@@ -128,7 +129,7 @@ fun MainApp() {
                 Text(text = "Logros Screen")
             }
             composable(NavRoutes.CAMERA) {
-                Text(text = "Cámara Screen")
+                CameraScreen()
             }
             composable(NavRoutes.MAP) {
                 FloorSelectorApp()
