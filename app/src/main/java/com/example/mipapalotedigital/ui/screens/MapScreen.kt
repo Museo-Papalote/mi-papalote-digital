@@ -71,7 +71,6 @@ fun FloorSelectorApp() {
                     translationY = offset.y
                 )
         )
-
         // Buttons for selecting floors overlaid on the image
         Row(
             modifier = Modifier
@@ -84,7 +83,11 @@ fun FloorSelectorApp() {
                     currentFloor = 1
                     resetZoomAndPan() // Reset zoom and pan when switching floors
                 },
-                enabled = currentFloor != 1
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (currentFloor == 1) Color.Green else Color.LightGray
+                ),
+
+                //enabled = currentFloor != 1
             ) {
                 Text(text = "Piso 1")
             }
@@ -94,7 +97,11 @@ fun FloorSelectorApp() {
                     currentFloor = 2
                     resetZoomAndPan() // Reset zoom and pan when switching floors
                 },
-                enabled = currentFloor != 2
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (currentFloor == 2) Color.Green else Color.LightGray
+                ),
+
+                //enabled = currentFloor != 2
             ) {
                 Text(text = "Piso 2")
             }
