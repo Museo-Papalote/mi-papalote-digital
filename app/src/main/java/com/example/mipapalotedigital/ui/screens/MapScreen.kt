@@ -8,8 +8,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
@@ -71,7 +74,6 @@ fun FloorSelectorApp() {
                     translationY = offset.y
                 )
         )
-
         // Buttons for selecting floors overlaid on the image
         Row(
             modifier = Modifier
@@ -82,9 +84,13 @@ fun FloorSelectorApp() {
             Button(
                 onClick = {
                     currentFloor = 1
-                    resetZoomAndPan() // Reset zoom and pan when switching floors
+                    //resetZoomAndPan() // Reset zoom and pan when switching floors
                 },
-                enabled = currentFloor != 1
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (currentFloor == 1) Color.Green else Color.LightGray
+                ),
+
+                //enabled = currentFloor != 1
             ) {
                 Text(text = "Piso 1")
             }
@@ -92,9 +98,13 @@ fun FloorSelectorApp() {
             Button(
                 onClick = {
                     currentFloor = 2
-                    resetZoomAndPan() // Reset zoom and pan when switching floors
+                    //resetZoomAndPan() // Reset zoom and pan when switching floors
                 },
-                enabled = currentFloor != 2
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (currentFloor == 2) Color.Green else Color.LightGray
+                ),
+
+                //enabled = currentFloor != 2
             ) {
                 Text(text = "Piso 2")
             }
