@@ -51,6 +51,10 @@ android {
 }
 
 dependencies {
+    implementation("androidx.activity:activity-compose:1.9.3")
+
+    implementation("com.journeyapps:zxing-android-embedded:4.3.0")
+
 
     // Dependencias para camara, foto y video
     implementation("androidx.camera:camera-core:1.4.0")

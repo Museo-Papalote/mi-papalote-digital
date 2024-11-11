@@ -55,7 +55,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun hasRequiredPermissions(): Boolean {
+    fun hasRequiredPermissions(): Boolean {
         return CAMERAX_PERMISSIONS.all { permission ->
             ContextCompat.checkSelfPermission(applicationContext, permission) == PackageManager.PERMISSION_GRANTED
         }
