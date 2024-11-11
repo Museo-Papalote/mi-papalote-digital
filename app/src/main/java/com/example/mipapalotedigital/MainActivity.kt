@@ -27,6 +27,7 @@ import com.example.mipapalotedigital.ui.screens.SignUpScreen
 import com.example.mipapalotedigital.ui.theme.MiPapaloteDigitalTheme
 import ActividadViewModel
 import com.example.mipapalotedigital.ui.screens.FloorSelectorApp
+import com.example.mipapalotedigital.ui.screens.ProgressScreen
 import com.example.mipapalotedigital.viewmodels.UsuarioViewModel
 import kotlinx.coroutines.launch
 
@@ -103,7 +104,7 @@ fun MainApp() {
                 )
             }
             composable(NavRoutes.ACHIEVEMENTS) {
-                Text(text = "Logros Screen")
+                ProgressScreen()
             }
             composable(NavRoutes.CAMERA) {
                 Text(text = "Cámara Screen")
