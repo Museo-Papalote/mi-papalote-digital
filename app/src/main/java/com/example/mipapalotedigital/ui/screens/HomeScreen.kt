@@ -1,6 +1,6 @@
 package com.example.mipapalotedigital.ui.screens
 
-import ActividadCard
+import com.example.mipapalotedigital.ui.components.ActividadCard
 import ActividadViewModel
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
