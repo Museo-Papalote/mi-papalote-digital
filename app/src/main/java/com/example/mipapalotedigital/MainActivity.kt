@@ -26,6 +26,11 @@ import com.example.mipapalotedigital.ui.screens.LoginScreen
 import com.example.mipapalotedigital.ui.screens.SignUpScreen
 import com.example.mipapalotedigital.ui.theme.MiPapaloteDigitalTheme
 import ActividadViewModel
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import com.example.mipapalotedigital.ui.screens.CameraScreen
 import com.example.mipapalotedigital.ui.screens.FloorSelectorApp
 import com.example.mipapalotedigital.ui.screens.ProgressScreen
 import com.example.mipapalotedigital.viewmodels.UsuarioViewModel
@@ -34,6 +39,11 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (!hasRequiredPermissions()) {
+            ActivityCompat.requestPermissions(this, CAMERAX_PERMISSIONS, 0)
+        }
+
         setContent {
             MiPapaloteDigitalTheme {
                 Surface(
@@ -44,6 +54,19 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    fun hasRequiredPermissions(): Boolean {
+        return CAMERAX_PERMISSIONS.all { permission ->
+            ContextCompat.checkSelfPermission(applicationContext, permission) == PackageManager.PERMISSION_GRANTED
+        }
+    }
+
+    companion object {
+        private val CAMERAX_PERMISSIONS = arrayOf(
+            Manifest.permission.CAMERA,
+            Manifest.permission.RECORD_AUDIO
+        )
     }
 }
 
@@ -107,7 +130,7 @@ fun MainApp() {
                 ProgressScreen()
             }
             composable(NavRoutes.CAMERA) {
-                Text(text = "Cámara Screen")
+                CameraScreen()
             }
             composable(NavRoutes.MAP) {
                 FloorSelectorApp()
@@ -118,3 +141,6 @@ fun MainApp() {
         }
     }
 }
+
+
+
