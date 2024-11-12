@@ -70,7 +70,6 @@ fun HomeScreen(
                 }
             }
 
-            // Título de sección
             item {
                 Text(
                     text = "Actividades destacadas",
