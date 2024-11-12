@@ -127,7 +127,7 @@ fun MainApp() {
                 )
             }
             composable(NavRoutes.ACHIEVEMENTS) {
-                ProgressScreen()
+                ProgressScreen(usuarioViewModel = usuarioViewModel)
             }
             composable(NavRoutes.CAMERA) {
                 CameraScreen()
