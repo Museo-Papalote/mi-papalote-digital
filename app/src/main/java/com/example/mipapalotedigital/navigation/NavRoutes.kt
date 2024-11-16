@@ -8,6 +8,7 @@ object NavRoutes {
     const val CAMERA = "camera"
     const val MAP = "map"
     const val ALBUM = "album"
+    const val PROFILE = "profile"
     const val ACTIVITY_DETAIL = "activity/{activityId}"
 
     fun createActivityRoute(activityId: String): String {

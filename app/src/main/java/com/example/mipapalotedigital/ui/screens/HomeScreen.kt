@@ -21,6 +21,8 @@ import androidx.navigation.NavController
 import com.example.mipapalotedigital.R
 import com.example.mipapalotedigital.ui.components.ActividadCard
 import ActividadViewModel
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import com.example.mipapalotedigital.viewmodels.UsuarioViewModel
 import com.example.mipapalotedigital.navigation.NavRoutes
 
@@ -79,7 +81,6 @@ fun HomeScreen(
                     .background(Color(0xFFF5F5F5)),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Header
                 item {
                     Box(
                         modifier = Modifier
@@ -91,45 +92,64 @@ fun HomeScreen(
                                 .fillMaxWidth()
                                 .padding(vertical = 24.dp)
                                 .padding(start = 16.dp, end = 24.dp),
-                            horizontalArrangement = Arrangement.Start,
+                            horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Card(
-                                shape = MaterialTheme.shapes.medium,
-                                colors = CardDefaults.cardColors(
-                                    containerColor = Color(0xFF87B734)
-                                ),
-                                modifier = Modifier.size(80.dp)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.weight(1f)
                             ) {
-                                Image(
-                                    painter = painterResource(id = R.drawable.logo_papalote_blanco),
-                                    contentDescription = "Logo Papalote",
+                                Card(
+                                    shape = MaterialTheme.shapes.medium,
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = Color(0xFF87B734)
+                                    ),
+                                    modifier = Modifier.size(80.dp)
+                                ) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.logo_papalote_blanco),
+                                        contentDescription = "Logo Papalote",
+                                        modifier = Modifier
+                                            .padding(8.dp)
+                                            .fillMaxSize(),
+                                        contentScale = ContentScale.Fit
+                                    )
+                                }
+                                Column(
                                     modifier = Modifier
-                                        .padding(8.dp)
-                                        .fillMaxSize(),
-                                    contentScale = ContentScale.Fit
-                                )
+                                        .padding(start = 24.dp),
+                                    horizontalAlignment = Alignment.Start
+                                ) {
+                                    Text(
+                                        text = "Bienvenid@",
+                                        style = MaterialTheme.typography.titleMedium.copy(
+                                            fontWeight = FontWeight.Medium,
+                                            letterSpacing = 0.5.sp
+                                        ),
+                                        color = Color.White.copy(alpha = 0.7f)
+                                    )
+                                    Text(
+                                        text = "${currentUser?.nombre ?: ""} ${currentUser?.apellido ?: ""}",
+                                        style = MaterialTheme.typography.headlineSmall.copy(
+                                            fontWeight = FontWeight.Bold
+                                        ),
+                                        color = Color.White
+                                    )
+                                }
                             }
-                            Column(
+                            IconButton(
+                                onClick = {
+                                    navController.navigate(NavRoutes.PROFILE)
+                                },
                                 modifier = Modifier
-                                    .weight(1f)
-                                    .padding(start = 24.dp),
-                                horizontalAlignment = Alignment.Start
+                                    .size(48.dp)
+                                    .padding(4.dp)
                             ) {
-                                Text(
-                                    text = "Bienvenid@",
-                                    style = MaterialTheme.typography.titleMedium.copy(
-                                        fontWeight = FontWeight.Medium,
-                                        letterSpacing = 0.5.sp
-                                    ),
-                                    color = Color.White.copy(alpha = 0.7f)
-                                )
-                                Text(
-                                    text = "${currentUser?.nombre ?: ""} ${currentUser?.apellido ?: ""}",
-                                    style = MaterialTheme.typography.headlineSmall.copy(
-                                        fontWeight = FontWeight.Bold
-                                    ),
-                                    color = Color.White
+                                Icon(
+                                    imageVector = Icons.Default.AccountCircle,
+                                    contentDescription = "Perfil",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(40.dp)
                                 )
                             }
                         }

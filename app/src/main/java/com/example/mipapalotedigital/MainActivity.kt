@@ -136,6 +136,12 @@ fun MainApp() {
             composable(NavRoutes.ALBUM) {
                 Text(text = "Álbum Screen")
             }
+            composable(NavRoutes.PROFILE) {
+                UserProfileScreen(
+                    navController = navController,
+                    viewModel = usuarioViewModel
+                )
+            }
             composable(
                 route = NavRoutes.ACTIVITY_DETAIL,
                 arguments = listOf(

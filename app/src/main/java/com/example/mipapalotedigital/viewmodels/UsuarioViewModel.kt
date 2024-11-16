@@ -76,4 +76,13 @@ class UsuarioViewModel(
     fun isUserLoggedIn(): Boolean {
         return (repository as UsuarioRepositoryImpl).isUserLoggedIn()
     }
+
+    suspend fun getCurrentUser() {
+        _isLoading.value = true
+        try {
+            _currentUser.value = (repository as UsuarioRepositoryImpl).getCurrentUser()
+        } finally {
+            _isLoading.value = false
+        }
+    }
 }
