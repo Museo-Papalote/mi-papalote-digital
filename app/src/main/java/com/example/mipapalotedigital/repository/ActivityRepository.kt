@@ -25,34 +25,46 @@ class ActividadRepositoryImpl : ActividadRepository {
                             id = document.id,
                             nombre = data["nombre"] as? String ?: "",
                             descripcion = data["descripcion"] as? String ?: "",
+                            objetivo = data["objetivo"] as? String ?: "",
+                            aprendizaje = data["aprendizaje"] as? String ?: "",
                             valoracion = (data["valoracion"] as? Long)?.toInt() ?: 0,
-                            comentario = data["comentario"] as? String ?: "",
                             idPrimo = data["idPrimo"] as? String ?: "",
                             idZona = data["idZona"] as? String ?: ""
-                        )
+                        ).also { actividad ->
+                            Log.d("ActividadRepository", """
+                                Mapped activity:
+                                ID: ${actividad.id}
+                                Nombre: ${actividad.nombre}
+                                Objetivo: ${if (actividad.objetivo.isNotEmpty()) "Present" else "Missing"}
+                                Aprendizaje: ${if (actividad.aprendizaje.isNotEmpty()) "Present" else "Missing"}
+                            """.trimIndent())
+                        }
                     } else null
                 } catch (e: Exception) {
-                    Log.e("ActividadRepository", "Error converting document: ${e.message}")
+                    Log.e("ActividadRepository", "Error converting document: ${e.message}", e)
                     null
                 }
             }
 
             Log.d("ActividadRepository", "Fetched ${actividades.size} actividades")
-            actividades.forEach { actividad ->
-                Log.d("ActividadRepository", "Actividad ID: ${actividad.id}, Nombre: ${actividad.nombre}")
-            }
 
+            // Obtener zonas
             val zonasSnapshot = firestore.collection("zonas").get().await()
             val zonasMap = zonasSnapshot.documents.associate { doc ->
                 doc.id to (doc.toObject(Zona::class.java) ?: Zona())
             }
 
+            // Combinar actividades y zonas
             actividades.shuffled()
                 .take(count)
                 .mapNotNull { actividad ->
                     val zona = zonasMap[actividad.idZona]
                     if (zona != null) {
-                        Log.d("ActividadRepository", "Pairing actividad ${actividad.id} with zona ${zona.id}")
+                        Log.d("ActividadRepository", """
+                            Pairing actividad with zona:
+                            Actividad: ${actividad.nombre} (${actividad.id})
+                            Zona: ${zona.nombre} (${zona.id})
+                        """.trimIndent())
                         Pair(actividad, zona)
                     } else null
                 }.also {
@@ -77,12 +89,19 @@ class ActividadRepositoryImpl : ActividadRepository {
                         id = document.id,
                         nombre = data["nombre"] as? String ?: "",
                         descripcion = data["descripcion"] as? String ?: "",
+                        objetivo = data["objetivo"] as? String ?: "",
+                        aprendizaje = data["aprendizaje"] as? String ?: "",
                         valoracion = (data["valoracion"] as? Long)?.toInt() ?: 0,
-                        comentario = data["comentario"] as? String ?: "",
                         idPrimo = data["idPrimo"] as? String ?: "",
                         idZona = data["idZona"] as? String ?: ""
-                    ).also {
-                        Log.d("ActividadRepository", "Retrieved activity: ${it.nombre} with ID: ${it.id}")
+                    ).also { actividad ->
+                        Log.d("ActividadRepository", """
+                            Retrieved activity:
+                            ID: ${actividad.id}
+                            Nombre: ${actividad.nombre}
+                            Objetivo: ${if (actividad.objetivo.isNotEmpty()) "Present" else "Missing"}
+                            Aprendizaje: ${if (actividad.aprendizaje.isNotEmpty()) "Present" else "Missing"}
+                        """.trimIndent())
                     }
                 } else null
             } else null

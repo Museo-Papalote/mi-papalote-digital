@@ -88,7 +88,7 @@ fun MainApp() {
     ) { paddingValues ->
         NavHost(
             navController = navController,
-            startDestination = NavRoutes.HOME,
+            startDestination = NavRoutes.LOGIN,
             modifier = Modifier.padding(paddingValues)
         ) {
             composable(NavRoutes.LOGIN) {
