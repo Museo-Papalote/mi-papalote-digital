@@ -10,34 +10,39 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
 
+// Componente que dibuja una barra de progreso circular
 @Composable
 fun CircleProgressBar(
-    progress: Float, // Progress from 0 to 1
-    strokeWidth: Float = 8f,
-    color: Color = MaterialTheme.colorScheme.primary,
-    modifier: Modifier = Modifier.size(200.dp)
+    progress: Float, // Progreso de 0 a 1 (donde 1 es el progreso completo)
+    strokeWidth: Float = 8f, // Ancho del trazo de la barra de progreso
+    primaryColor: Color, // Color para el progreso completado
+    secondaryColor: Color, // Color para el progreso restante
+    modifier: Modifier = Modifier.size(200.dp) // Tamaño del componente
 ) {
     Canvas(modifier = modifier) {
+        // Ángulo de inicio de la barra de progreso (inicia desde arriba)
         val startAngle = -90f
+        // Ángulo de barrido en función del progreso (0 a 360 grados)
         val sweepAngle = 360 * progress
+        // Convertir el ancho del trazo de dp a píxeles
         val strokeWidthPx = strokeWidth.dp.toPx()
 
-        // Background arc
+        // Dibuja el progreso restante (color secundario)
         drawArc(
-            color = color.copy(alpha = 0.3f),
-            startAngle = 0f,
-            sweepAngle = 360f,
-            useCenter = false,
-            style = Stroke(width = strokeWidthPx)
+            color = secondaryColor,
+            startAngle = 0f, // Inicia desde el ángulo 0
+            sweepAngle = 360f, // El barrido completo de la circunferencia
+            useCenter = false, // No dibuja el centro del círculo
+            style = Stroke(width = strokeWidthPx) // Aplica el estilo de trazo
         )
 
-        // Foreground arc
+        // Dibuja el progreso completado (color primario)
         drawArc(
-            color = color,
-            startAngle = startAngle,
-            sweepAngle = sweepAngle,
-            useCenter = false,
-            style = Stroke(width = strokeWidthPx, cap = StrokeCap.Round)
+            color = primaryColor,
+            startAngle = startAngle, // Ángulo de inicio
+            sweepAngle = sweepAngle, // Ángulo de barrido en función del progreso
+            useCenter = false, // No dibuja el centro del círculo
+            style = Stroke(width = strokeWidthPx, cap = StrokeCap.Round) // Aplica el estilo de trazo redondeado
         )
     }
 }
