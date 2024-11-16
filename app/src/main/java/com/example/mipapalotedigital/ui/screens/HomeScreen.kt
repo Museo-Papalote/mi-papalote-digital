@@ -1,7 +1,5 @@
 package com.example.mipapalotedigital.ui.screens
 
-import com.example.mipapalotedigital.ui.components.ActividadCard
-import ActividadViewModel
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -13,12 +11,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.mipapalotedigital.R
-import com.example.mipapalotedigital.viewmodels.UsuarioViewModel
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.mipapalotedigital.R
+import com.example.mipapalotedigital.ui.components.ActividadCard
+import ActividadViewModel
+import com.example.mipapalotedigital.viewmodels.UsuarioViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -31,54 +33,70 @@ fun HomeScreen(
     val actividades by actividadViewModel.randomActividades.collectAsState()
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(MaterialTheme.colorScheme.background),
-            verticalArrangement = Arrangement.spacedBy(8.dp) // Añade espacio consistente entre elementos
+                .background(Color(0xFFF5F5F5)),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                Row(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.Start,
-                    verticalAlignment = Alignment.CenterVertically
+                        .background(Color(0xFF87B734))
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.logo_papalote),
-                        contentDescription = "Logo Progreso",
+                    Row(
                         modifier = Modifier
-                            .size(48.dp)
-                            .padding(end = 8.dp)
-                    )
-
-                    Column {
-                        Text(
-                            text = "Bienvenid@,",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Color(0xFF87B734)
-                        )
-                        Text(
-                            text = "${currentUser?.nombre ?: ""} ${currentUser?.apellido ?: ""}",
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                            color = Color(0xFF87B734)
-                        )
+                            .fillMaxWidth()
+                            .padding(vertical = 24.dp)
+                            .padding(start = 16.dp, end = 24.dp),
+                        horizontalArrangement = Arrangement.Start,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Card(
+                            shape = MaterialTheme.shapes.medium,
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color(0xFF87B734)
+                            ),
+                            modifier = Modifier.size(80.dp)
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.logo_papalote_blanco),
+                                contentDescription = "Logo Papalote",
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .fillMaxSize(),
+                                contentScale = ContentScale.Fit
+                            )
+                        }
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(start = 24.dp),
+                            horizontalAlignment = Alignment.Start
+                        ) {
+                            Text(
+                                text = "Bienvenid@",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Medium,
+                                    letterSpacing = 0.5.sp
+                                ),
+                                color = Color.White.copy(alpha = 0.7f)
+                            )
+                            Text(
+                                text = "${currentUser?.nombre ?: ""} ${currentUser?.apellido ?: ""}",
+                                style = MaterialTheme.typography.headlineSmall.copy(
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = Color.White,
+                            )
+                        }
                     }
                 }
             }
-
-            item {
-                Text(
-                    text = "Actividades destacadas",
-                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-            }
-
             items(actividades) { (actividad, zona) ->
                 ActividadCard(
                     actividad = actividad,
@@ -93,7 +111,7 @@ fun HomeScreen(
             }
 
             item {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(24.dp))
             }
         }
     }
