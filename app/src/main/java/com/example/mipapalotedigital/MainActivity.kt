@@ -18,21 +18,19 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import BottomNavigationBar
 import com.example.mipapalotedigital.navigation.NavRoutes
 import ActividadRepositoryImpl
-import com.example.mipapalotedigital.ui.screens.HomeScreen
-import com.example.mipapalotedigital.ui.screens.LoginScreen
-import com.example.mipapalotedigital.ui.screens.SignUpScreen
+import com.example.mipapalotedigital.ui.screens.*
 import com.example.mipapalotedigital.ui.theme.MiPapaloteDigitalTheme
 import ActividadViewModel
 import android.Manifest
 import android.content.pm.PackageManager
+import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.example.mipapalotedigital.ui.screens.CameraScreen
-import com.example.mipapalotedigital.ui.screens.FloorSelectorApp
-import com.example.mipapalotedigital.ui.screens.ProgressScreen
 import com.example.mipapalotedigital.viewmodels.UsuarioViewModel
 import kotlinx.coroutines.launch
 
@@ -138,9 +136,31 @@ fun MainApp() {
             composable(NavRoutes.ALBUM) {
                 Text(text = "Álbum Screen")
             }
+            composable(
+                route = NavRoutes.ACTIVITY_DETAIL,
+                arguments = listOf(
+                    navArgument("activityId") {
+                        type = NavType.StringType
+                        nullable = false
+                    }
+                )
+            ) { backStackEntry ->
+                val activityId = backStackEntry.arguments?.getString("activityId")
+                Log.d("Navigation", "Received activity ID in navigation: $activityId")
+
+                if (!activityId.isNullOrEmpty()) {
+                    ActivityDetailScreen(
+                        activityId = activityId,
+                        actividadViewModel = actividadViewModel,
+                        navController = navController
+                    )
+                } else {
+                    Log.e("Navigation", "Invalid activity ID received")
+                    navController.popBackStack()
+                }
+            }
         }
     }
 }
-
 
 
