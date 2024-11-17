@@ -1,17 +1,21 @@
 package com.example.mipapalotedigital.viewmodels
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import com.example.mipapalotedigital.models.Usuario
 import com.example.mipapalotedigital.repository.UsuarioRepository
 import com.example.mipapalotedigital.repository.UsuarioRepositoryImpl
 import kotlinx.coroutines.flow.asStateFlow
 
 class UsuarioViewModel(
-    private val repository: UsuarioRepository = UsuarioRepositoryImpl()
+    private val repository: UsuarioRepository
 ) : ViewModel() {
-    private val _loginState = MutableStateFlow(true)
+    private val _loginState = MutableStateFlow(false)
     val loginState: StateFlow<Boolean> = _loginState.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
@@ -20,9 +24,26 @@ class UsuarioViewModel(
     private val _currentUser = MutableStateFlow<Usuario?>(null)
     val currentUser: StateFlow<Usuario?> = _currentUser.asStateFlow()
 
+    val authToken: StateFlow<String?> = (repository as UsuarioRepositoryImpl).authDataStore.authToken
+        .stateIn(viewModelScope, SharingStarted.Lazily, null)
+
     init {
-        if ((repository as UsuarioRepositoryImpl).isUserLoggedIn()) {
-            _loginState.value = true
+        viewModelScope.launch {
+            if ((repository as UsuarioRepositoryImpl).isUserLoggedIn()) {
+                repository.authDataStore.authToken.collect { token ->
+                    if (token != null) {
+                        _loginState.value = true
+                        getCurrentUser()
+                        repository.refreshTokenIfNeeded()
+                    } else {
+                        _loginState.value = false
+                        _currentUser.value = null
+                    }
+                }
+            } else {
+                _loginState.value = false
+                _currentUser.value = null
+            }
         }
     }
 
@@ -68,9 +89,11 @@ class UsuarioViewModel(
     }
 
     fun logout() {
-        (repository as UsuarioRepositoryImpl).logout()
-        _loginState.value = false
-        _currentUser.value = null
+        viewModelScope.launch {
+            (repository as UsuarioRepositoryImpl).logout()
+            _loginState.value = false
+            _currentUser.value = null
+        }
     }
 
     fun isUserLoggedIn(): Boolean {

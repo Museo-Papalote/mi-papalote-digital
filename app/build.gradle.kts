@@ -55,7 +55,6 @@ dependencies {
 
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
 
-
     // Dependencias para camara, foto y video
     implementation("androidx.camera:camera-core:1.4.0")
     implementation("androidx.camera:camera-lifecycle:1.4.0")
@@ -64,7 +63,7 @@ dependencies {
     implementation("androidx.camera:camera-video:1.4.0")
     implementation("androidx.camera:camera-view:1.4.0")
 
-
+    implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)

@@ -1,6 +1,7 @@
 package com.example.mipapalotedigital.repository
 
 import android.util.Log
+import com.example.mipapalotedigital.utils.AuthDataStore
 import com.example.mipapalotedigital.models.Usuario
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -8,14 +9,19 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 import com.google.firebase.auth.FirebaseAuth
-
+import kotlinx.coroutines.runBlocking
 
 interface UsuarioRepository {
     suspend fun login(correo: String, contrasenia: String): Boolean
     suspend fun signUp(usuario: Usuario): Boolean
+    suspend fun logout()
+    suspend fun getCurrentUser(): Usuario?
+    fun isUserLoggedIn(): Boolean
 }
 
-class UsuarioRepositoryImpl : UsuarioRepository {
+class UsuarioRepositoryImpl(
+    val authDataStore: AuthDataStore
+) : UsuarioRepository {
     private val auth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
     private val usersCollection = firestore.collection("usuarios")
@@ -25,7 +31,17 @@ class UsuarioRepositoryImpl : UsuarioRepository {
         return try {
             val result = suspendCoroutine { continuation ->
                 auth.signInWithEmailAndPassword(correo, contrasenia)
-                    .addOnSuccessListener {
+                    .addOnSuccessListener { authResult ->
+                        authResult.user?.getIdToken(false)?.addOnSuccessListener { result ->
+                            result.token?.let { token ->
+                                runBlocking {
+                                    authDataStore.saveAuthToken(token)
+                                    authResult.user?.uid?.let { uid ->
+                                        authDataStore.saveUserId(uid)
+                                    }
+                                }
+                            }
+                        }
                         Log.d("UsuarioRepositoryImpl", "Login successful for email: $correo")
                         continuation.resume(true)
                     }
@@ -44,12 +60,21 @@ class UsuarioRepositoryImpl : UsuarioRepository {
     override suspend fun signUp(usuario: Usuario): Boolean {
         Log.d("UsuarioRepositoryImpl", "Attempting to sign up with email: ${usuario.correo}")
         return try {
-            // Crear usuario en Firebase Auth
             val authResult = suspendCoroutine { continuation ->
                 auth.createUserWithEmailAndPassword(usuario.correo, usuario.contrasenia)
-                    .addOnSuccessListener {
+                    .addOnSuccessListener { result ->
+                        result.user?.getIdToken(false)?.addOnSuccessListener { tokenResult ->
+                            tokenResult.token?.let { token ->
+                                runBlocking {
+                                    authDataStore.saveAuthToken(token)
+                                    result.user?.uid?.let { uid ->
+                                        authDataStore.saveUserId(uid)
+                                    }
+                                }
+                            }
+                        }
                         Log.d("UsuarioRepositoryImpl", "User creation successful for email: ${usuario.correo}")
-                        continuation.resume(it)
+                        continuation.resume(result)
                     }
                     .addOnFailureListener { exception ->
                         Log.e("UsuarioRepositoryImpl", "User creation failed: ${exception.localizedMessage}")
@@ -57,7 +82,6 @@ class UsuarioRepositoryImpl : UsuarioRepository {
                     }
             }
 
-            // Guardar información adicional en Firestore
             val userData = hashMapOf(
                 "nombre" to usuario.nombre,
                 "apellido" to usuario.apellido,
@@ -77,7 +101,7 @@ class UsuarioRepositoryImpl : UsuarioRepository {
         }
     }
 
-    suspend fun getCurrentUser(): Usuario? {
+    override suspend fun getCurrentUser(): Usuario? {
         val firebaseUser = auth.currentUser
         if (firebaseUser == null) {
             Log.d("UsuarioRepositoryImpl", "No current user is logged in")
@@ -105,14 +129,27 @@ class UsuarioRepositoryImpl : UsuarioRepository {
         }
     }
 
-    fun logout() {
+    override suspend fun logout() {
         Log.d("UsuarioRepositoryImpl", "Logging out current user")
         auth.signOut()
+        authDataStore.clearAuth()
     }
 
-    fun isUserLoggedIn(): Boolean {
+    override fun isUserLoggedIn(): Boolean {
         val isLoggedIn = auth.currentUser != null
         Log.d("UsuarioRepositoryImpl", "Is user logged in: $isLoggedIn")
         return isLoggedIn
+    }
+
+    suspend fun refreshTokenIfNeeded() {
+        auth.currentUser?.let { user ->
+            try {
+                user.getIdToken(true).await().token?.let { token ->
+                    authDataStore.saveAuthToken(token)
+                }
+            } catch (e: Exception) {
+                Log.e("UsuarioRepositoryImpl", "Error refreshing token: ${e.localizedMessage}")
+            }
+        }
     }
 }
