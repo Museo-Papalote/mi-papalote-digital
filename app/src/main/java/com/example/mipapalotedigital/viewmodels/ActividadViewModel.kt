@@ -15,6 +15,9 @@ class ActividadViewModel(
     private val _randomActividades = MutableStateFlow<List<Pair<Actividad, Zona>>>(emptyList())
     val randomActividades = _randomActividades.asStateFlow()
 
+    private val _actividadesZona = MutableStateFlow<List<Pair<Actividad, Zona>>>(emptyList())
+    val actividadesZona = _actividadesZona.asStateFlow()
+
     private val _zonasDisponibles = MutableStateFlow<List<Zona>>(ZonaManager.zonas)
     val zonasDisponibles = _zonasDisponibles.asStateFlow()
 
@@ -83,5 +86,33 @@ class ActividadViewModel(
     fun clearSelectedActividad() {
         _selectedActividad.value = null
         _error.value = null
+    }
+
+    fun getActividadesByZonaNombre(nombreZona: String) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                _error.value = null
+
+                val zona = ZonaManager.getZonaByNombre(nombreZona)
+                if (zona == null) {
+                    _error.value = "Zona no encontrada"
+                    return@launch
+                }
+
+                val actividades = actividadRepository.getActividadesByZonaId(zona.id)
+                if (actividades.isEmpty()) {
+                    _error.value = "No se encontraron actividades para la zona $nombreZona"
+                    return@launch
+                }
+
+                _actividadesZona.value = actividades
+            } catch (e: Exception) {
+                Log.e("ActividadViewModel", "Error al cargar actividades por zona: ${e.message}")
+                _error.value = "Error al cargar actividades por zona: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
     }
 }
