@@ -3,43 +3,23 @@ package com.example.mipapalotedigital.ui.screens
 import ActividadViewModel
 import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
-import com.example.mipapalotedigital.R
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -48,26 +28,23 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-//import androidx.compose.ui.text.style.TextForegroundStyle.Unspecified.alpha
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
+import com.example.mipapalotedigital.R
 import com.example.mipapalotedigital.navigation.NavRoutes
 import com.example.mipapalotedigital.ui.components.ActividadCard
 import com.example.mipapalotedigital.utils.ZonaManager
-
 
 @Composable
 fun FloorSelector(
     actividadViewModel: ActividadViewModel,
     navController: NavController
 ) {
-    // empieza en piso 1
     var currentFloor by remember { mutableStateOf(1) }
 
-    // listas de areas que engloba cada zona por piso
     val piso1ClickableAreas = listOf(
         ClickableArea(0.47f, 0.48f, 0.35f, 0.13f, "Pertenezco"),
         ClickableArea(0.425f, 0.58f, 0.2f, 0.1f, "Comunico"),
@@ -80,65 +57,117 @@ fun FloorSelector(
         ClickableArea(0.7f, 0.58f, 0.1f, 0.075f, "Pequeños")
     )
 
-    // offset inicial para que se vean mas centrados los mapas inicialmente
     val initialOffsetPiso1 = Offset(-300f, -100f)
     val initialOffsetPiso2 = Offset(-400f, -150f)
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        if (currentFloor == 1) {
-            InteractiveMap(
-                imageResId = R.drawable.piso1,
-                clickableAreas = piso1ClickableAreas,
-                actividadViewModel = actividadViewModel,
-                navController = navController,
-                initialOffset = initialOffsetPiso1
-            )
-        } else {
-            InteractiveMap(
-                imageResId = R.drawable.piso2,
-                clickableAreas = piso2ClickableAreas,
-                actividadViewModel = actividadViewModel,
-                navController = navController,
-                initialOffset = initialOffsetPiso2
-            )
-        }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFE8F5E9)) // Fondo verde muy suave
+    ) {
+        var selectedZone by remember { mutableStateOf<String?>(null) }
 
-        // Botones piso1 y piso2
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 40.dp, start = 16.dp, end = 16.dp)
-                .zIndex(1f),
-            contentAlignment = Alignment.Center
-        ) {
+        // Contenido principal
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Botones de piso en la parte superior
             Row(
                 modifier = Modifier
-                    .padding(top = 10.dp)
-                    .align(Alignment.TopCenter),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    .fillMaxWidth()
+                    .padding(top = 16.dp)
+                    .zIndex(2f),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Button(
+                ElevatedButton(
                     onClick = { currentFloor = 1 },
                     modifier = Modifier
-                        .padding(horizontal = 24.dp, vertical = 8.dp)
-                        .scale(1.4f),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (currentFloor == 1) Color.LightGray else MaterialTheme.colorScheme.primary
-                    )
+                        .padding(horizontal = 8.dp)
+                        .height(56.dp)
+                        .width(140.dp),
+                    colors = ButtonDefaults.elevatedButtonColors(
+                        containerColor = if (currentFloor == 1) Color(0xFF87B734) else Color.White, // Verde claro para el botón seleccionado
+                        contentColor = if (currentFloor == 1) Color(0xFF1B5E20) else MaterialTheme.colorScheme.onSurface // Verde oscuro para el texto cuando está seleccionado
+                    ),
+                    elevation = ButtonDefaults.elevatedButtonElevation(
+                        defaultElevation = 6.dp,
+                        pressedElevation = 8.dp
+                    ),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
-                    Text(text = "Piso 1", style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        "Piso 1",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
                 }
-                Button(
+
+                ElevatedButton(
                     onClick = { currentFloor = 2 },
                     modifier = Modifier
-                        .padding(horizontal = 24.dp, vertical = 8.dp)
-                        .scale(1.4f),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (currentFloor == 2) Color.LightGray else MaterialTheme.colorScheme.primary
-                    )
+                        .padding(horizontal = 8.dp)
+                        .height(56.dp)
+                        .width(140.dp),
+                    colors = ButtonDefaults.elevatedButtonColors(
+                        containerColor = if (currentFloor == 2) Color(0xFF87B734) else Color.White, // Verde claro para el botón seleccionado
+                        contentColor = if (currentFloor == 2) Color(0xFF1B5E20) else MaterialTheme.colorScheme.onSurface // Verde oscuro para el texto cuando está seleccionado
+                    ),
+                    elevation = ButtonDefaults.elevatedButtonElevation(
+                        defaultElevation = 6.dp,
+                        pressedElevation = 8.dp
+                    ),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
-                    Text(text = "Piso 2", style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        "Piso 2",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
                 }
+            }
+
+            // Mapa con efecto de blur cuando hay zona seleccionada
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .then(
+                        if (selectedZone != null) {
+                            Modifier.blur(20.dp)
+                        } else {
+                            Modifier
+                        }
+                    )
+            ) {
+                if (currentFloor == 1) {
+                    InteractiveMap(
+                        imageResId = R.drawable.piso1,
+                        clickableAreas = piso1ClickableAreas,
+                        actividadViewModel = actividadViewModel,
+                        navController = navController,
+                        initialOffset = initialOffsetPiso1,
+                        onZoneSelected = { selectedZone = it }
+                    )
+                } else {
+                    InteractiveMap(
+                        imageResId = R.drawable.piso2,
+                        clickableAreas = piso2ClickableAreas,
+                        actividadViewModel = actividadViewModel,
+                        navController = navController,
+                        initialOffset = initialOffsetPiso2,
+                        onZoneSelected = { selectedZone = it }
+                    )
+                }
+            }
+
+            // Modal de actividades
+            selectedZone?.let { zoneName ->
+                ActivitiesModal(
+                    zoneName = zoneName,
+                    actividadViewModel = actividadViewModel,
+                    navController = navController,
+                    onDismiss = { selectedZone = null }
+                )
             }
         }
     }
@@ -152,171 +181,136 @@ fun InteractiveMap(
     clickableAreas: List<ClickableArea>,
     actividadViewModel: ActividadViewModel,
     navController: NavController,
-    initialOffset: Offset
+    initialOffset: Offset,
+    onZoneSelected: (String) -> Unit
 ) {
     var scale by remember { mutableStateOf(2.5f) }
     var offset by remember { mutableStateOf(initialOffset) }
-    var selectedLabel by remember { mutableStateOf<String?>(null) }
-
     var imageSize by remember { mutableStateOf(IntSize.Zero) }
-
-    val topPadding = 50.dp
     val density = LocalDensity.current
 
-    LaunchedEffect(selectedLabel) {
-        if (selectedLabel != null) {
-            actividadViewModel.getActividadesByZonaNombre(selectedLabel!!)
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(top = 80.dp)
+            .pointerInput(Unit) {
+                detectTransformGestures { _, pan, zoom, _ ->
+                    scale = (scale * zoom).coerceIn(1f, 5f)
+                    offset += pan
+                }
+            }
+    ) {
+        Box(
+            modifier = Modifier.graphicsLayer(
+                scaleX = scale,
+                scaleY = scale,
+                translationX = offset.x,
+                translationY = offset.y
+            )
+        ) {
+            Image(
+                painter = painterResource(id = imageResId),
+                contentDescription = "Mapa Interactivo",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .onGloballyPositioned { coordinates ->
+                        imageSize = coordinates.size
+                    }
+            )
+
+            if (imageSize.width > 0 && imageSize.height > 0) {
+                clickableAreas.forEach { area ->
+                    Box(
+                        modifier = Modifier
+                            .offset(
+                                x = with(density) { (area.x * imageSize.width).toDp() },
+                                y = with(density) { (area.y * imageSize.height).toDp() }
+                            )
+                            .size(
+                                width = with(density) { (area.width * imageSize.width).toDp() },
+                                height = with(density) { (area.height * imageSize.height).toDp() }
+                            )
+                            .pointerInput(Unit) {
+                                detectTapGestures {
+                                    onZoneSelected(area.label)
+                                }
+                            }
+                    )
+                }
+            }
         }
+    }
+}
+
+@Composable
+fun ActivitiesModal(
+    zoneName: String,
+    actividadViewModel: ActividadViewModel,
+    navController: NavController,
+    onDismiss: () -> Unit
+) {
+    LaunchedEffect(zoneName) {
+        actividadViewModel.getActividadesByZonaNombre(zoneName)
     }
 
     val actividades by actividadViewModel.actividadesZona.collectAsState()
     val isLoading by actividadViewModel.isLoading.collectAsState()
     val error by actividadViewModel.error.collectAsState()
-    var navigationError by remember { mutableStateOf<String?>(null) }
 
-    fun navigateToActivity(activityId: String) {
-        try {
-            Log.d("HomeScreen", "Attempting to navigate to activity: $activityId")
-            if (activityId.isNotEmpty()) {
-                val route = NavRoutes.createActivityRoute(activityId)
-                Log.d("HomeScreen", "Generated route: $route")
-                navController.navigate(route) {
-                    launchSingleTop = true
-                    restoreState = true
-                }
-            } else {
-                Log.e("HomeScreen", "Invalid activity ID")
-                navigationError = "IaD de actividad no válido"
-            }
-        } catch (e: Exception) {
-            Log.e("HomeScreen", "Navigation error: ${e.message}", e)
-            navigationError = "Error de navegación: ${e.message}"
-        }
-    }
-
-    Box(modifier = modifier.fillMaxSize()) {
-        // Layer 1: Interactive image layer (will be zoomed and panned)
-        Box(
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp)
+            .padding(top = 80.dp)
+    ) {
+        Surface(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(top = topPadding)
-                .pointerInput(Unit) {
-                    detectTransformGestures { _, pan, zoom, _ ->
-                        // Update the scale while keeping it within limits
-                        scale = (scale * zoom).coerceIn(1f, 5f)
-
-                        // Update offset directly for free movement
-                        offset += pan
-                    }
-                }
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(24.dp))
+                .shadow(elevation = 8.dp),
+            color = Color.White,
+            shape = RoundedCornerShape(24.dp)
         ) {
-            Box(
-                modifier = Modifier.graphicsLayer(
-                    scaleX = scale,
-                    scaleY = scale,
-                    translationX = offset.x,
-                    translationY = offset.y
-                )
-            ) {
-                // Map Image
-                Image(
-                    painter = painterResource(id = imageResId),
-                    contentDescription = "Interactive Map",
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .onGloballyPositioned { coordinates ->
-                            imageSize = coordinates.size
-                        }
-                )
-
-                // Overlay clickable areas
-                if (imageSize.width > 0 && imageSize.height > 0) {
-                    clickableAreas.forEach { area ->
-                        val areaX = area.x * imageSize.width
-                        val areaY = area.y * imageSize.height
-                        val areaWidth = area.width * imageSize.width
-                        val areaHeight = area.height * imageSize.height
-
-                        Box(
-                            modifier = Modifier
-                                .offset(
-                                    x = with(density) { areaX.toDp() },
-                                    y = with(density) { areaY.toDp() }
-                                )
-                                .size(
-                                    width = with(density) { areaWidth.toDp() },
-                                    height = with(density) { areaHeight.toDp() }
-                                )
-                                //.background(Color(0x5500FF00)) // Para ver zonas
-                                .pointerInput(Unit) {
-                                    detectTapGestures {
-                                        selectedLabel = area.label
-                                    }
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            //Text(text = "🔵") // Ver centro zona
-                        }
-                    }
-                }
-            }
-        }
-
-        // Layer 2: Selected label overlay (stays on top)
-        selectedLabel?.let { label ->
-            val zonaColor = ZonaManager.getColorForZonaNombre(label)
-            Box( // Caja del pop up
+            Column(
                 modifier = Modifier
-                    .padding(16.dp)
-                    .padding(top = 116.dp)
-                    .clip(RoundedCornerShape(16.dp))
-            ){
-                LazyColumn( // LazyColumn donde estara la zona y actividades
+                    .fillMaxWidth()
+                    .padding(24.dp)
+            ) {
+                // Header del modal
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .align(Alignment.TopCenter)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(zonaColor.copy(alpha = 0.2f))
-                        .padding(16.dp),
+                        .padding(bottom = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Zona $zoneName",
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = ZonaManager.getColorForZonaNombre(zoneName)
+                        )
+                    )
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Cerrar",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                // Contenido
+                LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    item { // Icono de cerrar para pop up
-                        Box(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.TopEnd
-                        ) {
-                            IconButton(onClick = { selectedLabel = null }) {
-                                Icon(
-                                    imageVector = Icons.Default.Close,
-                                    contentDescription = "Cerrar",
-                                    tint = zonaColor
-                                )
-                            }
-                        }
-                    }
-
-                    item { // Texto de nombre de zona
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(zonaColor.copy(alpha = 0.95f))
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center // Por alguna razon no funciona este
-                        ) {
-                            Text(
-                                text = "Actividades en zona $label",
-                                style = MaterialTheme.typography.headlineMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    letterSpacing = 1.sp
-                                ),
-                                color = Color.White,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                    }
-                    when { // mientras
-                        isLoading -> { // se esta cargando
+                    when {
+                        isLoading -> {
                             item {
                                 Box(
                                     modifier = Modifier
@@ -324,51 +318,52 @@ fun InteractiveMap(
                                         .height(200.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    CircularProgressIndicator()
+                                    CircularProgressIndicator(
+                                        color = ZonaManager.getColorForZonaNombre(zoneName)
+                                    )
                                 }
                             }
                         }
-                        error != null -> { // se produjo un error
+                        error != null -> {
+                            item {
+                                Text(
+                                    text = error ?: "Error desconocido",
+                                    color = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.padding(16.dp)
+                                )
+                            }
+                        }
+                        actividades.isEmpty() -> {
                             item {
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(16.dp),
+                                        .padding(32.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
-                                        text = error ?: "Error desconocido",
-                                        color = MaterialTheme.colorScheme.error
+                                        text = "No hay actividades disponibles en esta zona",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
                         }
-                        actividades.isEmpty() -> { // no hubo error en fetch pero
-                            item { // no hay actividades en la zona
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = "No hay actividades disponibles",
-                                        style = MaterialTheme.typography.bodyLarge
-                                    )
-                                }
-                            }
-                        }
-                        else -> { // se agarraron las actividades
+                        else -> {
                             items(actividades) { (actividad, zona) ->
-                                ActividadCard( // card por actividad
+                                ActividadCard(
                                     actividad = actividad,
                                     zona = zona,
                                     modifier = Modifier
-                                        .padding(horizontal = 16.dp)
-                                        .animateItemPlacement(),
+                                        .fillMaxWidth()
+                                        .shadow(
+                                            elevation = 2.dp,
+                                            shape = RoundedCornerShape(16.dp)
+                                        )
+                                        .clip(RoundedCornerShape(16.dp)),
                                     onVerMasClick = {
-                                        Log.d("HomeScreen", "Ver más clicked for activity: ${actividad.id}")
-                                        navigateToActivity(actividad.id)
+                                        navController.navigate(NavRoutes.createActivityRoute(actividad.id))
                                     }
                                 )
                             }
@@ -381,10 +376,10 @@ fun InteractiveMap(
 }
 
 data class ClickableArea(
-    val x: Float, // Relative x position (0f - 1f)
-    val y: Float, // Relative y position (0f - 1f)
-    val width: Float, // Relative width (0f - 1f)
-    val height: Float, // Relative height (0f - 1f)
+    val x: Float,
+    val y: Float,
+    val width: Float,
+    val height: Float,
     val label: String
 )
 
