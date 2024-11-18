@@ -150,7 +150,10 @@ fun MainApp(context: ComponentActivity) {
                 CameraScreen()
             }
             composable(NavRoutes.MAP) {
-                FloorSelectorApp()
+                FloorSelector(
+                    actividadViewModel = actividadViewModel,
+                    navController = navController
+                )
             }
             composable(NavRoutes.ALBUM) {
                 Text(text = "Álbum Screen")
