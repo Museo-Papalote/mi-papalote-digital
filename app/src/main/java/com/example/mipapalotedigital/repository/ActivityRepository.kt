@@ -7,6 +7,7 @@ import kotlinx.coroutines.tasks.await
 interface ActividadRepository {
     suspend fun getRandomActividades(count: Int): List<Pair<Actividad, Zona>>
     suspend fun getActividadById(id: String): Actividad?
+    suspend fun getActividadesByZonaId(zonaId: String): List<Pair<Actividad, Zona>>
 }
 
 class ActividadRepositoryImpl : ActividadRepository {
@@ -108,6 +109,60 @@ class ActividadRepositoryImpl : ActividadRepository {
         } catch (e: Exception) {
             Log.e("ActividadRepository", "Error getting activity by ID: ${e.message}", e)
             null
+        }
+    }
+
+    override suspend fun getActividadesByZonaId(zonaId: String): List<Pair<Actividad, Zona>> {
+        return try {
+            Log.d("ActividadRepository", "Getting activities for Zona with ID: $zonaId")
+
+            val actividadesSnapshot = firestore.collection("actividades")
+                .whereEqualTo("idZona", zonaId)
+                .get()
+                .await()
+
+            val actividades = actividadesSnapshot.documents.mapNotNull { document ->
+                try {
+                    val data = document.data
+                    if (data != null) {
+                        Actividad(
+                            id = document.id,
+                            nombre = data["nombre"] as? String ?: "",
+                            descripcion = data["descripcion"] as? String ?: "",
+                            objetivo = data["objetivo"] as? String ?: "",
+                            aprendizaje = data["aprendizaje"] as? String ?: "",
+                            valoracion = (data["valoracion"] as? Long)?.toInt() ?: 0,
+                            idPrimo = data["idPrimo"] as? String ?: "",
+                            idZona = data["idZona"] as? String ?: ""
+                        )
+                    } else null
+                } catch (e: Exception) {
+                    Log.e("ActividadRepository", "Error converting document: ${e.message}", e)
+                    null
+                }
+            }
+
+            Log.d("ActividadRepository", "Fetched ${actividades.size} actividades for Zona ID: $zonaId")
+
+            val zonaSnapshot = firestore.collection("zonas")
+                .document(zonaId)
+                .get()
+                .await()
+
+            val zona = zonaSnapshot.toObject(Zona::class.java)
+
+            if (zona != null) {
+                actividades.mapNotNull { actividad ->
+                    Pair(actividad, zona)
+                }
+            } else {
+                Log.e("ActividadRepository", "Zona not found for ID: $zonaId")
+                emptyList()
+            }
+
+        } catch (e: Exception) {
+            Log.e("ActividadRepository", "Error getting actividades for Zona ID: ${e.message}", e)
+            emptyList()
         }
     }
 }
