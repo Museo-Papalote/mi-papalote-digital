@@ -74,6 +74,11 @@ object ZonaManager {
         ))
     }
 
+    fun getColorForZonaNombre(nombre: String): Color {
+        val zona = getZonaByNombre(nombre)
+        return zona?.let { getColorForZona(it) } ?: Color.Black
+    }
+
     // Función de ayuda para debug
     fun logZonaInfo(zona: Zona) {
         println("Zona ID: ${zona.id}")
