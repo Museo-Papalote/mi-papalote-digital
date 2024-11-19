@@ -1,7 +1,8 @@
 package com.example.mipapalotedigital.navigation
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class BottomNavItem(
@@ -11,27 +12,27 @@ sealed class BottomNavItem(
 ) {
     object Home : BottomNavItem(
         route = NavRoutes.HOME,
-        icon = Icons.Filled.Home,
+        icon = Icons.Outlined.Home,
         title = "Inicio"
     )
     object Achievements : BottomNavItem(
-        route = NavRoutes.ACHIEVEMENTS,
-        icon = Icons.Filled.EmojiEvents,
-        title = "Logros"
+        route = NavRoutes.PROGRESS,
+        icon = Icons.Outlined.Star,
+        title = "Progreso"
     )
     object Camera : BottomNavItem(
         route = NavRoutes.CAMERA,
-        icon = Icons.Filled.PhotoCamera,
+        icon = Icons.Outlined.CameraAlt,
         title = "Cámara"
     )
     object Map : BottomNavItem(
         route = NavRoutes.MAP,
-        icon = Icons.Filled.Place,
+        icon = Icons.Outlined.Explore,
         title = "Mapa"
     )
     object Album : BottomNavItem(
         route = NavRoutes.ALBUM,
-        icon = Icons.Filled.PhotoLibrary,
+        icon = Icons.Rounded.Collections,
         title = "Álbum"
     )
 }

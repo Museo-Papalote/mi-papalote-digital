@@ -143,7 +143,7 @@ fun MainApp(context: ComponentActivity) {
                     navController = navController
                 )
             }
-            composable(NavRoutes.ACHIEVEMENTS) {
+            composable(NavRoutes.PROGRESS) {
                 ProgressScreen(usuarioViewModel = usuarioViewModel)
             }
             composable(NavRoutes.CAMERA) {

@@ -1,15 +1,19 @@
 package com.example.mipapalotedigital.ui.screens
 
+import ProgressViewModel
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -18,78 +22,183 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mipapalotedigital.R
+import com.example.mipapalotedigital.repository.ProgressRepositoryImpl
 import com.example.mipapalotedigital.ui.theme.CircleProgressBar
 import com.example.mipapalotedigital.viewmodels.UsuarioViewModel
 
 // Componente que representa la pantalla de progreso de las áreas del museo
 @Composable
-fun ProgressScreen(usuarioViewModel: UsuarioViewModel) {
+fun ProgressScreen(
+    usuarioViewModel: UsuarioViewModel,
+    progressViewModel: ProgressViewModel = viewModel { ProgressViewModel(ProgressRepositoryImpl()) }
+) {
     val currentUser by usuarioViewModel.currentUser.collectAsState()
+    val progress by progressViewModel.userProgress.collectAsState()
+
+    LaunchedEffect(currentUser?.id) {
+        currentUser?.id?.let { userId ->
+            progressViewModel.calculateProgress(userId)
+        }
+    }
+
+    val areaIds = mapOf(
+        "Pertenezco" to "CmQZ4MLp6M7c26s7h9Xg",
+        "Comunico" to "9hkzu2aJxSZDybUzsdAb",
+        "Pequeños" to "0zGFqkcIl1vo77p1rDhl",
+        "Comprendo" to "LHPJtOwRUqojQwn6yeJ3",
+        "Soy" to "RI0rBOL5odQ7EmPVtvSz",
+        "Expreso" to "mOMM1tyb7izKgyU4D1kP"
+    )
 
     val areas = listOf(
-        Area("Pertenezco", "Aprendo sobre la flora y la fauna de Nuevo León y conozco la gran red de vida que nos rodea.", 0.85f, R.drawable.pertenezco),
-        Area("Comunico", "Comparte tus ideas para mejorar el medio ambiente.", 0.65f, R.drawable.comunico),
-        Area("Pequeños", "Explora la naturaleza a través de tus sentidos en esta zona especial para la primera infancia.", 0.45f, R.drawable.pequenos),
-        Area("Comprendo", "Descubre cómo funciona el planeta y aprende a cuidarlo a través de la ciencia.", 0.75f, R.drawable.comprendo),
-        Area("Soy", "Conoce como tus decisiones pueden dañar o mejorar el medio ambiente.", 0.90f, R.drawable.soy),
-        Area("Expreso", "Refleja tus emociones y sentimientos sobre la naturaleza a través del arte.", 0.55f, R.drawable.expreso)
+        Area("Pertenezco", "Aprendo sobre la flora y la fauna de Nuevo León y conozco la gran red de vida que nos rodea.", progress[areaIds["Pertenezco"]] ?: 0f, R.drawable.pertenezco),
+        Area("Comunico", "Comparte tus ideas para mejorar el medio ambiente.", progress[areaIds["Comunico"]] ?: 0f, R.drawable.comunico),
+        Area("Pequeños", "Explora la naturaleza a través de tus sentidos en esta zona especial para la primera infancia.", progress[areaIds["Pequeños"]] ?: 0f, R.drawable.pequenos),
+        Area("Comprendo", "Descubre cómo funciona el planeta y aprende a cuidarlo a través de la ciencia.", progress[areaIds["Comprendo"]] ?: 0f, R.drawable.comprendo),
+        Area("Soy", "Conoce como tus decisiones pueden dañar o mejorar el medio ambiente.", progress[areaIds["Soy"]] ?: 0f, R.drawable.soy),
+        Area("Expreso", "Refleja tus emociones y sentimientos sobre la naturaleza a través del arte.", progress[areaIds["Expreso"]] ?: 0f, R.drawable.expreso)
     )
 
     val averageProgress = calculateAverageProgress(areas)
     val formattedProgress = (averageProgress * 100).toInt()
 
-    Scaffold(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = 16.dp),
-        topBar = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.Start,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.logo_papalote),
-                    contentDescription = "Logo Progreso",
-                    modifier = Modifier
-                        .size(48.dp)
-                        .padding(end = 8.dp)
-                )
-
-                Column {
-                    Text(
-                        text = "${currentUser?.nombre ?: ""} ${currentUser?.apellido ?: ""}",
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                        color = Color(0xFF87B734)
-                    )
-                    Text(
-                        text = "Progreso total: $formattedProgress%",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = Color(0xFF87B734)
-                    )
-                }
-            }
-        }
-    ) { innerPadding ->
+            .background(Color(0xFFF5F5F5))
+    ) {
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .background(MaterialTheme.colorScheme.background)
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                ProgresoHeader()
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFF87B734))
+                        .padding(vertical = 24.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = "${currentUser?.nombre ?: ""} ${currentUser?.apellido ?: ""}",
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 0.5.sp
+                            ),
+                            color = Color.White
+                        )
+                        Row(
+                            verticalAlignment = Alignment.Bottom,
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier.padding(top = 2.dp)
+                        ) {
+                            Text(
+                                text = "Progreso Total: ",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Medium
+                                ),
+                                color = Color.White.copy(alpha = 0.8f)
+                            )
+                            Text(
+                                text = "$formattedProgress%",
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
             }
             items(areas) { area ->
-                ExpandableAreaItem(area)
+                ModernAreaCard(area)
             }
+        }
+    }
+}
+
+@Composable
+fun ModernAreaCard(area: Area) {
+    var isExpanded by remember { mutableStateOf(false) }
+
+    val areaColors = mapOf(
+        "Pertenezco" to Color(0xFF66A40A),
+        "Comunico" to Color(0xFF0076A8),
+        "Expreso" to Color(0xFFFF6900),
+        "Comprendo" to Color(0xFF92278F),
+        "Soy" to Color(0xFFD22630),
+        "Pequeños" to Color(0xFF008C95)
+    )
+
+    val primaryColor = areaColors[area.name] ?: Color.Black
+    val backgroundColor = primaryColor.copy(alpha = 0.05f)
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .background(
+                color = backgroundColor,
+                shape = MaterialTheme.shapes.large
+            )
+            .clickable { isExpanded = !isExpanded }
+            .padding(20.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(20.dp)
+        ) {
+            CircularProgressWithImage(
+                progress = area.progress,
+                imageResId = area.imageResId,
+                primaryColor = primaryColor,
+                secondaryColor = primaryColor.copy(alpha = 0.2f),
+                modifier = Modifier.size(90.dp)
+            )
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = area.name,
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 0.5.sp
+                    ),
+                    color = primaryColor
+                )
+                Text(
+                    text = "${(area.progress * 100).toInt()}% completado",
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontWeight = FontWeight.Medium
+                    ),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        if (isExpanded) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = area.description,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                lineHeight = 24.sp
+            )
         }
     }
 }
