@@ -4,7 +4,7 @@ object NavRoutes {
     const val LOGIN = "login"
     const val SIGNUP = "signup"
     const val HOME = "home"
-    const val ACHIEVEMENTS = "achievements"
+    const val PROGRESS = "progress"
     const val CAMERA = "camera"
     const val MAP = "map"
     const val ALBUM = "album"
