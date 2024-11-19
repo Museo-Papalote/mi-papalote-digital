@@ -33,9 +33,30 @@ fun SignUpScreen(
     var passwordVisible by remember { mutableStateOf(false) }
     var signUpError by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
+    var showPrivacyDialog by remember { mutableStateOf(true) }
+    var isPrivacyAccepted by remember { mutableStateOf(false) }
 
     val coroutineScope = rememberCoroutineScope()
     val isLoading by usuarioViewModel.isLoading.collectAsState()
+
+    // Dialogo de aviso de privacidad
+    if (showPrivacyDialog) {
+        AlertDialog(
+            onDismissRequest = { /* no permite cerrar el diálogo sin aceptar */ },
+            title = { Text("Aviso de Privacidad") },
+            text = { Text("Por favor, acepte nuestro aviso de privacidad para continuar con el registro.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        isPrivacyAccepted = true
+                        showPrivacyDialog = false
+                    }
+                ) {
+                    Text("Aceptar")
+                }
+            }
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -160,7 +181,7 @@ fun SignUpScreen(
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFF87B734)
             ),
-            enabled = !isLoading
+            enabled = !isLoading && isPrivacyAccepted // Activado solo si el usuario acepta los términos
         ) {
             if (isLoading) {
                 CircularProgressIndicator(color = Color.White)
@@ -200,6 +221,3 @@ private fun validateFields(
             android.util.Patterns.EMAIL_ADDRESS.matcher(correo).matches() &&
             contrasenia.length >= 6
 }
-
-
-
