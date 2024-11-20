@@ -3,6 +3,8 @@ package com.example.mipapalotedigital.ui.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -33,9 +35,58 @@ fun SignUpScreen(
     var passwordVisible by remember { mutableStateOf(false) }
     var signUpError by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
+    var showPrivacyDialog by remember { mutableStateOf(true) }
+    var isPrivacyAccepted by remember { mutableStateOf(false) }
 
     val coroutineScope = rememberCoroutineScope()
     val isLoading by usuarioViewModel.isLoading.collectAsState()
+
+    // Dialogo de aviso de privacidad
+    if (showPrivacyDialog) {
+        AlertDialog(
+            onDismissRequest = { /* no permite cerrar el diálogo sin aceptar */ },
+            title = { Text("Aviso de Privacidad") },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Text("Aviso de Privacidad\n\n" +
+                            "En Papalote Museo del Niño, estamos comprometidos con la protección de la información personal de nuestros usuarios. Este aviso de privacidad explica cómo recopilamos, utilizamos, protegemos y compartimos la información que nos proporcionas al utilizar nuestra aplicación.\n\n" +
+                            "1. Recopilación de Información Personal\n" +
+                            "La aplicación puede solicitar información personal, como tu nombre, apellido, correo electrónico, número de teléfono, y contraseña para poder ofrecerte una experiencia personalizada y mejorar nuestros servicios. Esta información se recopila únicamente cuando tú decides proporcionarla y es fundamental para el funcionamiento de ciertas funciones de la aplicación.\n\n" +
+                            "2. Uso de la Información\n" +
+                            "La información recopilada se utilizará para:\n" +
+                            "- Facilitar el acceso y personalización de la aplicación.\n" +
+                            "- Enviar notificaciones y actualizaciones relacionadas con los servicios.\n" +
+                            "- Mejorar la experiencia del usuario y optimizar nuestros servicios.\n\n" +
+                            "3. Protección de la Información\n" +
+                            "Implementamos medidas de seguridad adecuadas para proteger tu información personal contra accesos no autorizados, alteraciones o divulgación.\n\n" +
+                            "4. Compartición de Información\n" +
+                            "No compartimos tu información personal con terceros, salvo en los casos en los que sea necesario para cumplir con la ley, proteger nuestros derechos, o mejorar el servicio en colaboración con socios de confianza, quienes también se comprometen a proteger tu información.\n\n" +
+                            "5. Derechos del Usuario\n" +
+                            "Tienes derecho a acceder, rectificar, o solicitar la eliminación de tu información personal en cualquier momento. También puedes limitar el uso de tu información contactándonos a través de los canales de atención de Papalote Museo del Niño.\n\n" +
+                            "6. Modificaciones al Aviso de Privacidad\n" +
+                            "Este aviso de privacidad puede actualizarse para reflejar cambios en nuestras prácticas o por disposiciones legales. Te notificaremos cualquier cambio importante y te alentamos a revisar el aviso periódicamente.\n\n" +
+                            "Contacto\n" +
+                            "Si tienes alguna pregunta o inquietud sobre nuestro aviso de privacidad, no dudes en contactarnos a través de nuestra página oficial o en los puntos de atención al usuario en el museo.")
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        isPrivacyAccepted = true
+                        showPrivacyDialog = false
+                    }
+                ) {
+                    Text("Aceptar")
+                }
+            },
+            modifier = Modifier
+                .padding(vertical = 180.dp) // Padding solo en la parte superior e inferior
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -160,7 +211,7 @@ fun SignUpScreen(
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFF87B734)
             ),
-            enabled = !isLoading
+            enabled = !isLoading && isPrivacyAccepted // Activado solo si el usuario acepta los términos
         ) {
             if (isLoading) {
                 CircularProgressIndicator(color = Color.White)
@@ -200,6 +251,3 @@ private fun validateFields(
             android.util.Patterns.EMAIL_ADDRESS.matcher(correo).matches() &&
             contrasenia.length >= 6
 }
-
-
-
