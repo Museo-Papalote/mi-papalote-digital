@@ -251,3 +251,4 @@ private fun validateFields(
             android.util.Patterns.EMAIL_ADDRESS.matcher(correo).matches() &&
             contrasenia.length >= 6
 }
+
