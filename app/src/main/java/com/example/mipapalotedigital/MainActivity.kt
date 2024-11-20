@@ -156,7 +156,7 @@ fun MainApp(context: ComponentActivity) {
                 )
             }
             composable(NavRoutes.ALBUM) {
-                Text(text = "Álbum Screen")
+                AlbumLogroScreen()
             }
             composable(NavRoutes.PROFILE) {
                 UserProfileScreen(
