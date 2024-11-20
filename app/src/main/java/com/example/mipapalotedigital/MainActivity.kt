@@ -33,9 +33,11 @@ import android.content.pm.PackageManager
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.example.mipapalotedigital.repository.AlbumLogroRepositoryImpl
 import com.example.mipapalotedigital.viewmodels.UsuarioViewModel
 import com.example.mipapalotedigital.utils.AuthDataStore
 import com.example.mipapalotedigital.repository.UsuarioRepositoryImpl
+import com.example.mipapalotedigital.viewmodel.AlbumLogroViewModel
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -89,6 +91,14 @@ fun MainApp(context: ComponentActivity) {
         factory = object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 return ActividadViewModel(ActividadRepositoryImpl()) as T
+            }
+        }
+    )
+
+    val albumLogroViewModel: AlbumLogroViewModel = viewModel(
+        factory = object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return AlbumLogroViewModel(AlbumLogroRepositoryImpl()) as T
             }
         }
     )
@@ -156,7 +166,11 @@ fun MainApp(context: ComponentActivity) {
                 )
             }
             composable(NavRoutes.ALBUM) {
-                AlbumLogroScreen()
+                val userId = usuarioViewModel.currentUser.collectAsState().value?.id ?: ""
+                AlbumLogroScreen(
+                    viewModel = albumLogroViewModel,
+                    userId = userId
+                )
             }
             composable(NavRoutes.PROFILE) {
                 UserProfileScreen(
