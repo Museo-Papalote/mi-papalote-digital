@@ -1,18 +1,18 @@
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.*
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.mipapalotedigital.navigation.BottomNavItem
@@ -34,75 +34,126 @@ fun BottomNavigationBar(
     val excludedRoutes = listOf(NavRoutes.LOGIN, NavRoutes.SIGNUP)
 
     if (currentRoute !in excludedRoutes) {
-        NavigationBar(
-            containerColor = MaterialTheme.colorScheme.background,
-            tonalElevation = 12.dp,
+        Box(
             modifier = Modifier
-                .shadow(
-                    elevation = 16.dp,
-                    spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                    ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                )
+                .fillMaxWidth()
+                .height(85.dp)
         ) {
-            items.forEach { item ->
-                NavigationBarItem(
-                    icon = {
+            // Efecto de sombra superior
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(85.dp)
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color.White.copy(alpha = 0f),
+                                Color.White.copy(alpha = 0.95f),
+                                Color.White
+                            )
+                        )
+                    )
+            )
+
+            // Barra de navegación principal
+            Surface(
+                modifier = Modifier
+                    .padding(horizontal = 24.dp, vertical = 12.dp)
+                    .fillMaxWidth()
+                    .height(60.dp)
+                    .align(Alignment.BottomCenter),
+                shape = RoundedCornerShape(30.dp),
+                color = Color.White,
+                shadowElevation = 8.dp,
+                border = BorderStroke(
+                    width = 1.dp,
+                    color = Color(0xFFEEEEEE)
+                )
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    items.forEach { item ->
+                        val selected = currentRoute == item.route
+
                         Box(
-                            modifier = Modifier.size(52.dp),
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight(),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                imageVector = item.icon,
-                                contentDescription = item.title,
-                                modifier = Modifier.size(if (currentRoute == item.route) 32.dp else 24.dp),
-                                tint = if (currentRoute == item.route) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-                                }
-                            )
-                            if (currentRoute == item.route) {
+                            // Elemento de navegación
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier
+                                    .clickable {
+                                        navController.navigate(item.route) {
+                                            popUpTo(navController.graph.startDestinationId) {
+                                                saveState = true
+                                            }
+                                            restoreState = true
+                                            launchSingleTop = true
+                                        }
+                                    }
+                                    .padding(4.dp)
+                            ) {
                                 Box(
                                     modifier = Modifier
-                                        .matchParentSize()
-                                        .background(
-                                            brush = Brush.radialGradient(
-                                                colors = listOf(
-                                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                                                    Color.Transparent
-                                                )
-                                            )
-                                        )
+                                        .size(42.dp)
+                                        .then(
+                                            if (selected) {
+                                                Modifier
+                                                    .background(
+                                                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                                        shape = CircleShape
+                                                    )
+                                                    .border(
+                                                        width = 2.dp,
+                                                        color = MaterialTheme.colorScheme.primary,
+                                                        shape = CircleShape
+                                                    )
+                                            } else {
+                                                Modifier
+                                            }
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = item.icon,
+                                        contentDescription = item.title,
+                                        modifier = Modifier
+                                            .size(if (selected) 24.dp else 22.dp)
+                                            .graphicsLayer {
+                                                scaleX = if (selected) 1.1f else 1f
+                                                scaleY = if (selected) 1.1f else 1f
+                                            },
+                                        tint = if (selected) {
+                                            MaterialTheme.colorScheme.primary
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                        }
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.height(2.dp))
+
+                                Text(
+                                    text = item.title,
+                                    fontSize = 11.sp,
+                                    maxLines = 1,
+                                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                                    color = if (selected) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                    }
                                 )
                             }
                         }
-                    },
-                    label = {
-                        Text(
-                            text = item.title,
-                            fontSize = 12.sp,
-                            fontWeight = if (currentRoute == item.route) FontWeight.SemiBold else FontWeight.Normal,
-                            modifier = Modifier.padding(top = 2.dp)
-                        )
-                    },
-                    selected = currentRoute == item.route,
-                    onClick = {
-                        navController.navigate(item.route) {
-                            popUpTo(navController.graph.startDestinationId) {
-                                saveState = true
-                            }
-                            restoreState = true
-                            launchSingleTop = true
-                        }
-                    },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = MaterialTheme.colorScheme.primary,
-                        selectedTextColor = MaterialTheme.colorScheme.primary,
-                        indicatorColor = MaterialTheme.colorScheme.surface,
-                        unselectedIconColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-                        unselectedTextColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-                    )
-                )
+                    }
+                }
             }
         }
     }
