@@ -19,72 +19,63 @@ class AlbumLogroRepositoryImpl : AlbumLogroRepository {
     override suspend fun getUserLogros(userId: String): List<Triple<AlbumLogro, Logro, String>> =
         withContext(Dispatchers.IO) {
             try {
-                // Fetch user's unlocked achievements
+                // Fetch all logros first to have a complete reference
+                val allLogros = firestore.collection("logros")
+                    .get()
+                    .await()
+                    .documents
+                    .mapNotNull { doc ->
+                        doc.toObject(Logro::class.java)?.copy(id = doc.id)
+                    }
+                    .associateBy { it.id }
+
+                Log.d("AlbumLogroRepository", "Total logros found: ${allLogros.size}")
+
+                // Fetch user's album logros
                 val userAlbumLogros = firestore.collection("albumLogro")
                     .whereEqualTo("idUsuario", userId)
                     .get()
                     .await()
                     .documents
                     .mapNotNull { doc ->
-                        val albumLogro = doc.toObject(AlbumLogro::class.java)
-                        Log.d("AlbumLogroRepository", "Raw albumLogro data: ${doc.data}")
-                        albumLogro?.also {
-                            Log.d("AlbumLogroRepository", "Found user logro - ID: ${it.id}, LogroID: ${it.idLogro}, Desbloqueado: ${it.desbloqueado}")
-                        }
-                    }
-                    .associateBy { it.idLogro }
-
-                Log.d("AlbumLogroRepository", "Total user albumLogros found: ${userAlbumLogros.size}")
-                userAlbumLogros.forEach { (key, value) ->
-                    Log.d("AlbumLogroRepository", "UserAlbumLogro Map Entry - Key: $key, Value: ${value.idLogro}, Desbloqueado: ${value.desbloqueado}")
-                }
-
-                // Fetch all achievements
-                val allLogros = firestore.collection("logros")
-                    .get()
-                    .await()
-                    .documents
-                    .mapNotNull { doc ->
-                        val logro = doc.toObject(Logro::class.java)?.copy(id = doc.id)
-                        Log.d("AlbumLogroRepository", "Raw logro data: ${doc.data}")
-                        logro?.also {
-                            Log.d("AlbumLogroRepository", "Processing logro - ID: ${it.id}")
-                        }
+                        doc.toObject(AlbumLogro::class.java)?.copy(id = doc.id)
                     }
 
-                // Create achievement states
-                val result = allLogros.mapNotNull { logro ->
+                Log.d("AlbumLogroRepository", "User albumLogros found: ${userAlbumLogros.size}")
+
+                // Create a map of unlocked achievements
+                val unlockedLogros = userAlbumLogros.associateBy { it.idLogro }
+
+                // Process all logros and create states
+                val result = allLogros.values.mapNotNull { logro ->
                     try {
+                        // Get zona ID for the logro
                         val zonaId = firestore.collection("actividades")
                             .document(logro.idActividad)
                             .get()
                             .await()
                             .getString("idZona") ?: return@mapNotNull null
 
-                        val userAlbumLogro = userAlbumLogros[logro.id]
-                        Log.d("AlbumLogroRepository", "Checking logro ${logro.id} - Found in userAlbumLogros: ${userAlbumLogro != null}")
+                        // Find or create corresponding AlbumLogro
+                        val albumLogro = unlockedLogros[logro.id] ?: AlbumLogro(
+                            id = "locked_${logro.id}",
+                            desbloqueado = false,
+                            idUsuario = userId,
+                            idLogro = logro.id
+                        )
 
-                        val albumLogro = if (userAlbumLogro != null) {
-                            Log.d("AlbumLogroRepository", "Achievement ${logro.id} is UNLOCKED")
-                            userAlbumLogro
-                        } else {
-                            Log.d("AlbumLogroRepository", "Achievement ${logro.id} is locked")
-                            AlbumLogro(
-                                id = "locked_${logro.id}",
-                                desbloqueado = false,
-                                idUsuario = userId,
-                                idLogro = logro.id
-                            )
-                        }
+                        Log.d("AlbumLogroRepository", "Processing logro: ${logro.id}, Unlocked: ${albumLogro.desbloqueado}")
 
                         Triple(albumLogro, logro, zonaId)
                     } catch (e: Exception) {
-                        Log.e("AlbumLogroRepository", "Error fetching data for logro ${logro.id}", e)
+                        Log.e("AlbumLogroRepository", "Error processing logro ${logro.id}", e)
                         null
                     }
                 }
 
+                Log.d("AlbumLogroRepository", "Final result size: ${result.size}")
                 result
+
             } catch (e: Exception) {
                 Log.e("AlbumLogroRepository", "Error getting user logros", e)
                 emptyList()
