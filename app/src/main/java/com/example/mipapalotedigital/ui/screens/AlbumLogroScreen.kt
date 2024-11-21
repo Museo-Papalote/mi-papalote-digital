@@ -5,8 +5,10 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -39,48 +41,50 @@ fun AlbumLogroScreen(
         viewModel.getUserLogros(userId)
     }
 
-    val headerColor = Color(0xFF87B734) // Papalote green color
+    val primaryColor = Color(0xFF87B734)
+    val gradientColors = listOf(
+        primaryColor,
+        primaryColor.copy(alpha = 0.95f),
+        primaryColor.copy(alpha = 0.9f)
+    )
 
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
-        containerColor = Color(0xFFF5F5F5), // Light gray background
+        containerColor = Color(0xFFF8F9FA),
         topBar = {
             Column {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(
-                                    headerColor,
-                                    headerColor.copy(alpha = 0.95f)
-                                )
-                            )
+                            brush = Brush.verticalGradient(gradientColors)
                         )
                 ) {
                     LargeTopAppBar(
                         title = {
-                            Column(modifier = Modifier.padding(start = 8.dp)) {
+                            Column(
+                                modifier = Modifier.padding(start = 8.dp)
+                            ) {
                                 Text(
                                     text = "Álbum de Logros",
                                     style = MaterialTheme.typography.headlineMedium.copy(
-                                        fontWeight = FontWeight.Bold,
+                                        fontWeight = FontWeight.ExtraBold,
                                         color = Color.White
                                     )
                                 )
                                 Text(
                                     text = "Colecciona tus aventuras",
-                                    style = MaterialTheme.typography.bodyMedium.copy(
-                                        color = Color.White.copy(alpha = 0.8f)
+                                    style = MaterialTheme.typography.bodyLarge.copy(
+                                        color = Color.White.copy(alpha = 0.9f)
                                     )
                                 )
                             }
                         },
                         colors = TopAppBarDefaults.largeTopAppBarColors(
                             containerColor = Color.Transparent,
-                            scrolledContainerColor = headerColor.copy(alpha = 0.95f),
+                            scrolledContainerColor = primaryColor.copy(alpha = 0.95f),
                             titleContentColor = Color.White
                         ),
                         actions = {
@@ -89,7 +93,7 @@ fun AlbumLogroScreen(
                                 enabled = !isLoading
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.Refresh,
+                                    imageVector = Icons.Outlined.Refresh,
                                     contentDescription = "Actualizar",
                                     tint = Color.White
                                 )
@@ -99,27 +103,27 @@ fun AlbumLogroScreen(
                     )
                 }
 
-                // Stats bar
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color.White)
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    StatItem(
+                    StatCard(
                         count = logros.count { it.isUnlocked },
                         total = logros.size,
                         label = "Desbloqueados",
-                        icon = Icons.Default.EmojiEvents,
-                        color = headerColor
+                        icon = Icons.Outlined.EmojiEvents,
+                        color = primaryColor,
+                        modifier = Modifier.weight(1f)
                     )
-                    StatItem(
+                    StatCard(
                         count = logros.size - logros.count { it.isUnlocked },
                         total = logros.size,
                         label = "Por Descubrir",
-                        icon = Icons.Default.Lock,
-                        color = Color.Gray
+                        icon = Icons.Outlined.Lock,
+                        color = Color(0xFF6C757D),
+                        modifier = Modifier.weight(1f)
                     )
                 }
             }
@@ -136,7 +140,7 @@ fun AlbumLogroScreen(
                 else -> {
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(2),
-                        contentPadding = PaddingValues(12.dp),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                         modifier = Modifier.fillMaxSize()
@@ -166,36 +170,65 @@ fun AlbumLogroScreen(
 }
 
 @Composable
-private fun StatItem(
+private fun StatCard(
     count: Int,
     total: Int,
     label: String,
     icon: ImageVector,
-    color: Color
+    color: Color,
+    modifier: Modifier = Modifier
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = color,
-            modifier = Modifier.size(24.dp)
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 2.dp
         )
-        Column {
-            Text(
-                text = "$count/$total",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = color
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = color.copy(alpha = 0.1f),
+                modifier = Modifier.size(44.dp)
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = color,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+            Column(
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Text(
+                    text = "$count/$total",
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = color
+                    )
                 )
-            )
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-            )
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontSize = 11.sp
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                )
+            }
         }
     }
 }
@@ -209,34 +242,48 @@ private fun ErrorState(error: String, onRetry: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(
-            imageVector = Icons.Default.ErrorOutline,
-            contentDescription = null,
-            modifier = Modifier.size(64.dp),
-            tint = MaterialTheme.colorScheme.error
-        )
-        Spacer(modifier = Modifier.height(16.dp))
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.1f),
+            modifier = Modifier.size(80.dp)
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.ErrorOutline,
+                    contentDescription = null,
+                    modifier = Modifier.size(40.dp),
+                    tint = MaterialTheme.colorScheme.error
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(24.dp))
         Text(
             text = "¡Ups! Algo salió mal",
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.titleLarge.copy(
+                fontWeight = FontWeight.Bold
+            ),
             textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = error,
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.error,
             textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.height(24.dp))
-        FilledTonalButton(
+        Button(
             onClick = onRetry,
-            colors = ButtonDefaults.filledTonalButtonColors(
-                containerColor = MaterialTheme.colorScheme.errorContainer
-            )
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.error
+            ),
+            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
         ) {
             Icon(
-                Icons.Default.Refresh,
+                Icons.Outlined.Refresh,
                 contentDescription = null,
                 modifier = Modifier.size(18.dp)
             )
@@ -255,17 +302,27 @@ private fun EmptyState() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(
-            imageVector = Icons.Default.EmojiEvents,
-            contentDescription = null,
-            modifier = Modifier
-                .size(64.dp)
-                .padding(bottom = 16.dp),
-            tint = Color(0xFF87B734)
-        )
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = Color(0xFF87B734).copy(alpha = 0.1f),
+            modifier = Modifier.size(80.dp)
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.EmojiEvents,
+                    contentDescription = null,
+                    modifier = Modifier.size(40.dp),
+                    tint = Color(0xFF87B734)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(24.dp))
         Text(
             text = "¡Aún no tienes logros!",
-            style = MaterialTheme.typography.titleLarge.copy(
+            style = MaterialTheme.typography.headlineSmall.copy(
                 fontWeight = FontWeight.Bold
             ),
             textAlign = TextAlign.Center
@@ -273,7 +330,7 @@ private fun EmptyState() {
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "Completa actividades para desbloquear logros y verlos aquí",
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
             textAlign = TextAlign.Center
         )
@@ -285,12 +342,13 @@ private fun LoadingOverlay() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White.copy(alpha = 0.8f)),
+            .background(Color.White.copy(alpha = 0.9f)),
         contentAlignment = Alignment.Center
     ) {
         CircularProgressIndicator(
             modifier = Modifier.size(48.dp),
-            color = Color(0xFF87B734)
+            color = Color(0xFF87B734),
+            strokeWidth = 4.dp
         )
     }
 }
