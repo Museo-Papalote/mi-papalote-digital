@@ -1,5 +1,6 @@
 package com.example.mipapalotedigital.ui.screens
 
+import android.util.Log
 import androidx.compose.animation.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -23,6 +24,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mipapalotedigital.ui.components.AchievementCard
+import com.example.mipapalotedigital.utils.ZonaManager
 import com.example.mipapalotedigital.viewmodel.AlbumLogroViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -149,10 +151,19 @@ fun AlbumLogroScreen(
                             items = logros,
                             key = { it.albumLogro.id }
                         ) { logroState ->
+                            val zonaColor = ZonaManager.getColorForZona(logroState.zonaId)
+                            Log.d("AlbumLogroScreen", """
+                                        Logro: ${logroState.logro.nombre}
+                                        Zona ID: ${logroState.zonaId}
+                                        Zona Info: ${ZonaManager.getZonaById(logroState.zonaId)?.nombre}
+                                        Color Raw: ${ZonaManager.getZonaById(logroState.zonaId)?.color}
+                                        Color Usado: $zonaColor
+                                    """.trimIndent())
+
                             AchievementCard(
                                 title = logroState.logro.nombre,
                                 description = logroState.logro.descripcion,
-                                zoneColor = Color(android.graphics.Color.parseColor(viewModel.getZonaColor(logroState.zonaId))),
+                                zoneColor = zonaColor,
                                 isUnlocked = logroState.isUnlocked,
                                 achievementId = logroState.logro.id,
                                 modifier = Modifier.animateItemPlacement()

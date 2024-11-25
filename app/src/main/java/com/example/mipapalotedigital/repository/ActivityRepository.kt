@@ -173,13 +173,44 @@ class ActividadRepositoryImpl : ActividadRepository {
         return try {
             Log.d("ActividadRepository", "Procesando QR Demo para usuario: ${currentUser.nombre}")
 
-            // 1. Seleccionar una actividad aleatoria
-            val actividadesSnapshot = firestore.collection("actividades").get().await()
-            val actividades = actividadesSnapshot.documents.mapNotNull { it.toObject(Actividad::class.java) }
-            val actividadSeleccionada = actividades.random()
+            // 1. Obtener actividades completadas por el usuario
+            val actividadesCompletadas = firestore.collection("logAsistencia")
+                .whereEqualTo("idUsuario", currentUser.id)
+                .get()
+                .await()
+                .documents
+                .mapNotNull { it.getString("idActividad") }
+                .toSet()
 
-            // 2. Crear registro de asistencia
+            // 2. Obtener todas las actividades disponibles
+            val actividadesSnapshot = firestore.collection("actividades").get().await()
+            val actividadesDisponibles = actividadesSnapshot.documents.mapNotNull { doc ->
+                doc.toObject(Actividad::class.java)?.takeIf {
+                    !actividadesCompletadas.contains(it.id)
+                }
+            }
+
+            if (actividadesDisponibles.isEmpty()) {
+                Log.d("ActividadRepository", "El usuario ya ha completado todas las actividades disponibles")
+                return null
+            }
+
+            // 3. Seleccionar una actividad aleatoria no completada
+            val actividadSeleccionada = actividadesDisponibles.random()
+
+            // 4. Verificar si ya existe un registro de asistencia para esta actividad
             val logId = "log_${currentUser.id}_${actividadSeleccionada.id}"
+            val existingLog = firestore.collection("logAsistencia")
+                .document(logId)
+                .get()
+                .await()
+
+            if (existingLog.exists()) {
+                Log.d("ActividadRepository", "Ya existe un registro de asistencia para esta actividad")
+                return null
+            }
+
+            // 5. Crear registro de asistencia
             val logAsistencia = hashMapOf(
                 "id" to logId,
                 "fechaVisita" to Date().time,
@@ -187,38 +218,53 @@ class ActividadRepositoryImpl : ActividadRepository {
                 "idUsuario" to currentUser.id
             )
 
-            // 3. Buscar el logro correspondiente
+            // 6. Buscar el logro específicamente relacionado con esta actividad
             val logroSnapshot = firestore.collection("logros")
                 .whereEqualTo("idActividad", actividadSeleccionada.id)
+                .limit(1)  // Nos aseguramos de obtener solo uno
                 .get()
                 .await()
 
             val logro = logroSnapshot.documents.firstOrNull()?.let {
-                it.id to (it.data?.get("nombre") as? String ?: "")
+                val logroId = it.id
+                val logroNombre = it.getString("nombre") ?: ""
+                logroId to logroNombre
             }
 
             if (logro != null) {
-                // 4. Crear registro de logro desbloqueado
+                // 7. Verificar si ya tiene el logro desbloqueado
                 val albumLogroId = "albumLogro_${currentUser.id}_${logro.first}"
+                val existingAlbumLogro = firestore.collection("albumLogro")
+                    .document(albumLogroId)
+                    .get()
+                    .await()
+
+                if (existingAlbumLogro.exists() && existingAlbumLogro.getBoolean("desbloqueado") == true) {
+                    Log.d("ActividadRepository", "El usuario ya tiene este logro desbloqueado")
+                    return null
+                }
+
+                // 8. Crear o actualizar registro de logro
                 val albumLogro = hashMapOf(
                     "id" to albumLogroId,
                     "desbloqueado" to true,
                     "idUsuario" to currentUser.id,
-                    "idLogro" to logro.first
+                    "idLogro" to logro.first,
+                    "fechaDesbloqueo" to Date().time
                 )
 
-                // 5. Ejecutar las operaciones en batch
+                // 9. Ejecutar las operaciones en batch
                 val batch = firestore.batch()
                 batch.set(firestore.collection("logAsistencia").document(logId), logAsistencia)
                 batch.set(firestore.collection("albumLogro").document(albumLogroId), albumLogro)
                 batch.commit().await()
 
                 Log.d("ActividadRepository", """
-                    Demo completada exitosamente:
-                    Usuario: ${currentUser.nombre} ${currentUser.apellido}
-                    Actividad: ${actividadSeleccionada.nombre}
-                    Logro: ${logro.second}
-                """.trimIndent())
+                Demo completada exitosamente:
+                Usuario: ${currentUser.nombre} ${currentUser.apellido}
+                Actividad: ${actividadSeleccionada.nombre}
+                Logro: ${logro.second}
+            """.trimIndent())
 
                 Triple(actividadSeleccionada, currentUser.id, logro.second)
             } else {
