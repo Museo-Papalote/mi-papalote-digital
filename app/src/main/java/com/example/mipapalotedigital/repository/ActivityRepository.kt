@@ -1,13 +1,16 @@
 import android.util.Log
 import com.example.mipapalotedigital.models.Actividad
+import com.example.mipapalotedigital.models.Usuario
 import com.example.mipapalotedigital.models.Zona
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
+import java.util.Date
 
 interface ActividadRepository {
     suspend fun getRandomActividades(count: Int): List<Pair<Actividad, Zona>>
     suspend fun getActividadById(id: String): Actividad?
     suspend fun getActividadesByZonaId(zonaId: String): List<Pair<Actividad, Zona>>
+    suspend fun procesarQRDemo(qrContent: String, currentUser: Usuario): Triple<Actividad, String, String>?
 }
 
 class ActividadRepositoryImpl : ActividadRepository {
@@ -163,6 +166,69 @@ class ActividadRepositoryImpl : ActividadRepository {
         } catch (e: Exception) {
             Log.e("ActividadRepository", "Error getting actividades for Zona ID: ${e.message}", e)
             emptyList()
+        }
+    }
+
+    override suspend fun procesarQRDemo(qrContent: String, currentUser: Usuario): Triple<Actividad, String, String>? {
+        return try {
+            Log.d("ActividadRepository", "Procesando QR Demo para usuario: ${currentUser.nombre}")
+
+            // 1. Seleccionar una actividad aleatoria
+            val actividadesSnapshot = firestore.collection("actividades").get().await()
+            val actividades = actividadesSnapshot.documents.mapNotNull { it.toObject(Actividad::class.java) }
+            val actividadSeleccionada = actividades.random()
+
+            // 2. Crear registro de asistencia
+            val logId = "log_${currentUser.id}_${actividadSeleccionada.id}"
+            val logAsistencia = hashMapOf(
+                "id" to logId,
+                "fechaVisita" to Date().time,
+                "idActividad" to actividadSeleccionada.id,
+                "idUsuario" to currentUser.id
+            )
+
+            // 3. Buscar el logro correspondiente
+            val logroSnapshot = firestore.collection("logros")
+                .whereEqualTo("idActividad", actividadSeleccionada.id)
+                .get()
+                .await()
+
+            val logro = logroSnapshot.documents.firstOrNull()?.let {
+                it.id to (it.data?.get("nombre") as? String ?: "")
+            }
+
+            if (logro != null) {
+                // 4. Crear registro de logro desbloqueado
+                val albumLogroId = "albumLogro_${currentUser.id}_${logro.first}"
+                val albumLogro = hashMapOf(
+                    "id" to albumLogroId,
+                    "desbloqueado" to true,
+                    "idUsuario" to currentUser.id,
+                    "idLogro" to logro.first
+                )
+
+                // 5. Ejecutar las operaciones en batch
+                val batch = firestore.batch()
+                batch.set(firestore.collection("logAsistencia").document(logId), logAsistencia)
+                batch.set(firestore.collection("albumLogro").document(albumLogroId), albumLogro)
+                batch.commit().await()
+
+                Log.d("ActividadRepository", """
+                    Demo completada exitosamente:
+                    Usuario: ${currentUser.nombre} ${currentUser.apellido}
+                    Actividad: ${actividadSeleccionada.nombre}
+                    Logro: ${logro.second}
+                """.trimIndent())
+
+                Triple(actividadSeleccionada, currentUser.id, logro.second)
+            } else {
+                Log.e("ActividadRepository", "No se encontró logro para la actividad ${actividadSeleccionada.id}")
+                null
+            }
+
+        } catch (e: Exception) {
+            Log.e("ActividadRepository", "Error en procesarQRDemo: ${e.message}", e)
+            null
         }
     }
 }

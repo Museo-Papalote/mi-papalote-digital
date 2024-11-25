@@ -157,7 +157,7 @@ fun MainApp(context: ComponentActivity) {
                 ProgressScreen(usuarioViewModel = usuarioViewModel)
             }
             composable(NavRoutes.CAMERA) {
-                CameraScreen()
+                CameraScreen(usuarioViewModel = usuarioViewModel)
             }
             composable(NavRoutes.MAP) {
                 FloorSelector(

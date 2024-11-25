@@ -1,5 +1,7 @@
 package com.example.mipapalotedigital.ui.screens
 
+import ActividadRepository
+import ActividadRepositoryImpl
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
@@ -16,24 +18,52 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.mipapalotedigital.models.Actividad
+import com.example.mipapalotedigital.viewmodels.UsuarioViewModel
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
-fun CameraScreen() {
+fun CameraScreen(
+	actividadRepository: ActividadRepository = ActividadRepositoryImpl(),
+	usuarioViewModel: UsuarioViewModel
+) {
 	var showScanner by remember { mutableStateOf(false) }
-	var scanResult by remember { mutableStateOf<String?>(null) }
+	var scanResult by remember { mutableStateOf<Triple<Actividad, String, String>?>(null) }
 	var showError by remember { mutableStateOf(false) }
+	var isLoading by remember { mutableStateOf(false) }
 	val coroutineScope = rememberCoroutineScope()
+
+	val currentUser by usuarioViewModel.currentUser.collectAsState()
 
 	val scanLauncher = rememberLauncherForActivityResult(contract = ScanContract()) { result ->
 		if (result.contents != null) {
-			scanResult = result.contents
-			showScanner = false
+			isLoading = true
+			coroutineScope.launch {
+				try {
+					currentUser?.let { user ->
+						val demoResult = actividadRepository.procesarQRDemo(result.contents, user)
+						if (demoResult != null) {
+							scanResult = demoResult
+							showError = false
+						} else {
+							showError = true
+						}
+					} ?: run {
+						showError = true
+					}
+				} catch (e: Exception) {
+					showError = true
+				} finally {
+					isLoading = false
+					showScanner = false
+				}
+			}
 		} else {
 			showError = true
 			showScanner = false
@@ -74,14 +104,24 @@ fun CameraScreen() {
 					shape = CircleShape,
 					color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
 				) {
-					Icon(
-						imageVector = Icons.Outlined.QrCodeScanner,
-						contentDescription = null,
-						modifier = Modifier
-							.padding(24.dp)
-							.size(48.dp),
-						tint = MaterialTheme.colorScheme.primary
-					)
+					if (isLoading) {
+						CircularProgressIndicator(
+							modifier = Modifier
+								.padding(24.dp)
+								.size(48.dp),
+							color = MaterialTheme.colorScheme.primary
+						)
+					} else {
+						Icon(
+							imageVector = if (scanResult == null) Icons.Outlined.QrCodeScanner
+							else Icons.Outlined.CheckCircle,
+							contentDescription = null,
+							modifier = Modifier
+								.padding(24.dp)
+								.size(48.dp),
+							tint = MaterialTheme.colorScheme.primary
+						)
+					}
 				}
 			}
 
@@ -117,15 +157,6 @@ fun CameraScreen() {
 					color = MaterialTheme.colorScheme.primary
 				)
 			} else {
-				Icon(
-					imageVector = Icons.Outlined.CheckCircle,
-					contentDescription = null,
-					modifier = Modifier.size(48.dp),
-					tint = MaterialTheme.colorScheme.primary
-				)
-
-				Spacer(modifier = Modifier.height(16.dp))
-
 				Text(
 					text = "¡Asistencia Registrada!",
 					style = MaterialTheme.typography.headlineSmall.copy(
@@ -134,13 +165,57 @@ fun CameraScreen() {
 					textAlign = TextAlign.Center
 				)
 
+				Spacer(modifier = Modifier.height(16.dp))
+
+				currentUser?.let { user ->
+					Text(
+						text = "${user.nombre}, ¡has completado la actividad!",
+						style = MaterialTheme.typography.titleMedium.copy(
+							fontWeight = FontWeight.Medium
+						),
+						textAlign = TextAlign.Center,
+						color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+					)
+
+					Spacer(modifier = Modifier.height(8.dp))
+				}
+
+				Text(
+					text = scanResult?.first?.nombre ?: "",
+					style = MaterialTheme.typography.titleMedium.copy(
+						fontWeight = FontWeight.SemiBold
+					),
+					textAlign = TextAlign.Center,
+					color = MaterialTheme.colorScheme.primary
+				)
+
 				Spacer(modifier = Modifier.height(8.dp))
 
 				Text(
-					text = "Tu participación ha sido registrada exitosamente",
+					text = "¡Has desbloqueado un nuevo logro!",
 					style = MaterialTheme.typography.bodyLarge,
 					textAlign = TextAlign.Center,
 					color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+				)
+
+				Spacer(modifier = Modifier.height(8.dp))
+
+				Text(
+					text = scanResult?.third ?: "",
+					style = MaterialTheme.typography.titleMedium.copy(
+						fontWeight = FontWeight.Medium
+					),
+					textAlign = TextAlign.Center,
+					color = MaterialTheme.colorScheme.secondary
+				)
+
+				Spacer(modifier = Modifier.height(8.dp))
+
+				Text(
+					text = scanResult?.first?.descripcion ?: "",
+					style = MaterialTheme.typography.bodyMedium,
+					textAlign = TextAlign.Center,
+					color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
 				)
 			}
 
@@ -167,7 +242,8 @@ fun CameraScreen() {
 				shape = RoundedCornerShape(16.dp),
 				colors = ButtonDefaults.buttonColors(
 					containerColor = MaterialTheme.colorScheme.primary
-				)
+				),
+				enabled = !isLoading
 			) {
 				Icon(
 					imageVector = if (scanResult == null) Icons.Outlined.QrCode else Icons.Outlined.CameraAlt,
@@ -221,8 +297,9 @@ fun CameraScreen() {
 	}
 }
 
-@androidx.compose.ui.tooling.preview.Preview
+@Preview
 @Composable
 fun CameraPreview() {
-	CameraScreen()
+	// Note: This preview won't work properly due to the ViewModel dependency
+	// You would need to create a mock ViewModel for preview purposes
 }
